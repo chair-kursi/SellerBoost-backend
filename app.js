@@ -10,6 +10,8 @@ const globalSizeRouter = require('./routes/globalSizes')
 const sizeMasterRouter = require('./routes/sizeMasters')
 const skuMasterRouter = require('./routes/skuMasters')
 const stylePropMasterRouter = require('./routes/stylePropMasters')
+const skuPlanRouter = require('./routes/skuPlans')
+const stylePlanRouter = require('./routes/stylePlans')
 
 
 //MIDDLEWARES
@@ -19,10 +21,12 @@ app.use(express.json());
 
 //USING ROUTES AS A MIDDLEWARE
 app.use('/style', styleRouter)
-app.use('/', skuMasterRouter)
-app.use('/', sizeMasterRouter)
+app.use('/sku', skuMasterRouter)
+app.use('/size', sizeMasterRouter)
 app.use('/', globalSizeRouter)
 app.use('/', stylePropMasterRouter)
+app.use('/', skuPlanRouter)
+app.use('/', stylePlanRouter)
 
 
 
@@ -33,7 +37,7 @@ mongoose.connect(process.env.DB_CONNECTION,
         useUnifiedTopology: true,
     }
 )
-.then(() => console.log("Database connected!"))
-.catch(err => console.log(err));
+    .then(() => console.log("Database connected!"))
+    .catch(err => console.log(err));
 
 app.listen(3002)

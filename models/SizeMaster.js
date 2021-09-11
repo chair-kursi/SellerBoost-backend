@@ -1,19 +1,16 @@
 const mongoose = require("mongoose")
 
 const sizeMasterSchema = mongoose.Schema({
-    clientID: {
-        type: String
-    },
-    ClientSizeName: {
-        type: String
-    },
-    ClientSizeCode: {
-        type: String
-    },
-    Visible: {
-        type: String
-    },
     sizeCode: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    name:{
+        type: String,
+        required: true
+    },
+    order:{
         type: String,
         // required: true
     },

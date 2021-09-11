@@ -1,42 +1,48 @@
 const mongoose = require("mongoose")
 
-const styleSchema = mongoose.Schema({
-    clientID: {
-        type: String
+const styleSchema = mongoose.Schema({ 
+    clientId:{
+        type:String,
+        default:"StyloBug"
     },
     styleCode: {
-        type: String
+        type: String,
+        // required: true,
+        unique: true
     },
     name: {
-        type: String
+        type: String,
+        // required: true
     },
     type: {
-        type: String
+        type: String//Ask for this also
     },
-    HasSize: {
-        type: String//Ask sir about this
+    hasSize: {
+        type: Boolean,
+        // required: true
     },
     color: {
-        type: String
+        type: String,
+        // required: true
+    }, 
+    frontImageUrl: {
+        type: String,
+        // required: true
     },
-    mrp: {
-        type: String
+    backImageUrl: {
+        type: String,
+        // required: true
     },
-    frontImgUrl: {
-        type: String
-    },
-    backImgUrl: {
-        type: String
-    },
-    zoomImgUrl: {
-        type: String
-    },
-    status:{
+    zoomImageUrl: {
+        type: String,
+        // required: true
+    }, 
+    barCode: {
         type: String
     },
     created: {
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     updated: {
         type: Date,

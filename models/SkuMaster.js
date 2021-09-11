@@ -2,24 +2,29 @@ const mongoose = require("mongoose")
 
 const skuMasterSchema = mongoose.Schema({
     clientID: {
-        type: String
-    },
-    sku: {
         type: String,
-        // required: true
+        default: "StyloBug"
+    },
+    skuCode: {
+        type: String,
+        // required: true,
+        unique: true
     },
     sizeCode: {
         type: String,
+        unique: true
     },
     BarCode: {
         type: String,
+        unique: true
     },
     styleCode: {
         type: String,
+        unique: true
     },
     created: {
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     updated: {
         type: Date,
