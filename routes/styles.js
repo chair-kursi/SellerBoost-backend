@@ -1,27 +1,44 @@
 const express = require('express');
-const { check } = require('express-validator');
 const router = express.Router();
 const Style = require('../models/Style');
-const styles = require('../validators/styles'); 
+const { successStyleResponse, errorStyleResponse, validateStyle } = require('../validators/stylesValidator');
+const { getClientId } = require('../services/getClientId')
 
+
+const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
+
+const notClientIdAndStyleCode = (styleCode, clientId) => {
+
+    return {
+        errorCode: "GenEx",
+        httpStatus: 400,
+        locator: [{
+            id: "StyleCode",
+            message: `No style found with StyleCode: ${styleCode} & ClientId: ${clientId}`
+        }],
+        internalMessage: "Validation Err",
+        timeStamp: Date().toString()
+    }
+}
 
 //GETTING ALL STYLES
 router.get('/', async (req, res) => {
-    try {
-        const style = await Style.find()
-        res.json(style)
+    try {  
+        const style = await Style.find({ clientId: clientId });
+        res.json(style);
+
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
 //GETTING A SPECIFIC STYLE
-router.get('/:styleId', async (req, res) => {
+router.get('/:styleCode', async (req, res) => {
     try {
-        const style = await Style.find({ _id: req.params.styleId })
-        res.json(style)
+        const style = await Style.find({ styleCode: req.params.styleCode, clientId: clientId });
+        res.json(style);
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
@@ -30,16 +47,15 @@ router.get('/:styleId', async (req, res) => {
 router.post('/add', async (req, res) => {
 
     if (req.body.styleCode === "SB-11")
-        return styles.successStyleResponse(res)
+        return successStyleResponse(res);
     else if (req.body.styleCode === "SB-00")
-        return styles.errorStyleResponse(res)
+        return errorStyleResponse(res);
 
     //VALIDATING REQUEST
     const style = new Style(req.body);
-    const validateStyle = styles.validateStyle(req);
 
-    if (Object.keys(validateStyle).length) {
-        return res.status(400).json(validateStyle);
+    if (Object.keys(validateStyle(req)).length) {
+        return res.status(400).json(validateStyle(req));
     }
 
     try {
@@ -48,7 +64,7 @@ router.post('/add', async (req, res) => {
         res.status(200).json({ data: savedStyle, error: {} });
 
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
@@ -56,24 +72,30 @@ router.post('/add', async (req, res) => {
 
 //UPDATING A STYLE
 router.patch('/update/:styleCode', async (req, res) => {//REMEMBER TO SEND REQUEST OF ONLY UPDATED/CHANGED FIELDS
-    
-    //VALIDATING REQUEST
-    const validateStyle = styles.validateStyle(req);
-    if (Object.keys(validateStyle).length) {
-        return res.status(400).json(validateStyle);
+
+    //VALIDATING REQUEST 
+    if (Object.keys(validateStyle(req)).length) {
+        return res.status(400).json(validateStyle(req));
     }
 
+    const style = await Style.findOne({ clientId: clientId, styleCode: req.params.styleCode });
+
+    if (!style)
+        return res.status(400).json({
+            data: null,
+            error: notClientIdAndStyleCode(req.params.styleCode, clientId)
+        })
 
     try {
-        const updatedStyle = await Style.findOneAndUpdate({ styleCode: req.params.styleCode },//findByIdAndUpdate()
+        const updatedStyle = await Style.findOneAndUpdate({ styleCode: req.params.styleCode },
             req.body,
             {
                 new: true
-            })
-        res.json({ data: updatedStyle, error: {}})//REQ.BODY DOESN'T INCLUDES STYLE CODE, TO INCLUDE IT, WE HAVE TO MAKE ONE MORE API CALL
+            });
+        res.json({ data: updatedStyle, error: {} });//REQ.BODY DOESN'T INCLUDES STYLE CODE, TO INCLUDE IT, WE HAVE TO MAKE ONE MORE API CALL
 
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 
 })

@@ -1,16 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const SizeMaster = require('../models/SizeMaster');
-const sizes = require('../validators/sizes');
+const { validateSize } = require('../validators/sizesValidators');
+const { getClientId } = require('../services/getClientId');
+
+
+const clientId = getClientId();
+
+const notClientIdAndSizeCode = (sizeCode, clientId) => {
+    return {
+        errorCode: "GenEx",
+        httpStatus: 400,
+        locator: [{
+            id: "SizeCode",
+            message: `No size found with SizeCode: ${sizeCode} & ClientId: ${clientId}`
+        }],
+        internalMessage: "Validation Err",
+        timeStamp: Date().toString()
+    };
+}
 
 
 //GET ALL SIZES
 router.get('/', async (req, res) => {
     try {
-        const style = await SizeMaster.find()
-        res.json(style)
+        const sizes = await SizeMaster.find({ clientId: clientId })
+        res.json(sizes);
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
@@ -18,28 +35,28 @@ router.get('/', async (req, res) => {
 //GET SPECIFIC SIZE
 router.get('/:sizeCode', async (req, res) => {
     try {
-        const size = await SizeMaster.find({ sizeCode: req.params.sizeCode })
-        res.json(size)
+        const size = await SizeMaster.findOne({ sizeCode: req.params.sizeCode, clientId: clientId })
+        res.json(size);
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
 //CREATE NEW SIZE
 router.post('/add', async (req, res) => {
 
-    const validateSize = sizes.validateSize(req);
-    if (Object.keys(validateSize).length)
-        return res.status(400).json(validateSize);
+    if (Object.keys(validateSize(req)).length)
+        return res.status(400).json(validateSize(req));
 
     try {
-        const size = new SizeMaster(req.body);
 
+        const size = new SizeMaster(req.body);
         const savedSize = await size.save();
-        res.json({ data: savedSize, error: {} })
+
+        res.json({ data: savedSize, error: {} });
 
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
@@ -47,15 +64,25 @@ router.post('/add', async (req, res) => {
 //UPDATING A SIZE
 router.patch('/update/:sizeCode', async (req, res) => {
 
-    const validateSize = sizes.validateSize(req);
-    if (Object.keys(validateSize).length)
-        return res.status(400).json(validateSize);
+    //VALIDATING REQUESTS
+    if (Object.keys(validateSize(req)).length)
+        return res.status(400).json(validateSize(req));
+
+    //VALIDATING SIZECODE WITH CLIENT_ID
+    const size = await SizeMaster.findOne({ clientId: clientId, sizeCode: req.params.sizeCode })
+    if (!size)//SIZE == NULL
+        return res.status(400).json({
+            data: null,
+            error: notClientIdAndSizeCode(req.params.sizeCode, clientId)
+        });
+
+
 
     try {
-        const updatedSize = await SizeMaster.findOneAndUpdate({ styleCode: req.params.sizeCode }, req.body);
-        res.json({ data: updatedSize, error: {} })
+        const updatedSize = await SizeMaster.findOneAndUpdate({ sizeCode: req.params.sizeCode }, req.body);
+        res.json({ data: updatedSize, error: {} });
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 
 })

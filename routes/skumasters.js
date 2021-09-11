@@ -1,15 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const SkuMaster = require('../models/SkuMaster')
-const skus = require("../validators/skus")
+const SkuMaster = require('../models/SkuMaster');
+const { getClientId } = require('../services/getClientId');
+const { validateSku } = require('../validators/skusValidators');
+
+
+const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
+
+const notClientIdAndSkuCode = (skuCode, clientId) => {
+
+    return {
+        errorCode: "GenEx",
+        httpStatus: 400,
+        locator: [{
+            id: "SkuCode",
+            message: `No sku found with SkuCode: ${skuCode} & ClientId: ${clientId}`
+        }],
+        internalMessage: "Validation Err",
+        timeStamp: Date().toString()
+    }
+}
+
 
 //GET ALL SKUS
 router.get('/', async (req, res) => {
     try {
-        const style = await SkuMaster.find()
-        res.json(style)
+        const sku = await SkuMaster.find({ clientId: clientId })
+        res.json(sku);
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
@@ -17,25 +36,24 @@ router.get('/', async (req, res) => {
 //GET SPECIFIC SKU
 router.get('/:skuCode', async (req, res) => {
     try {
-        const size = await SkuMaster.find({ sizeCode: req.params.skuCode })
-        res.json(size)
+        const sku = await SkuMaster.find({ skuCode: req.params.skuCode, clientId: clientId })
+        res.json(sku);
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 })
 
 //CREATE NEW SKU
 router.post('/add', async (req, res) => {
 
-    const validateSku = skus.validateSku(req);
-    if (Object.keys(validateSku).length)
-        return res.status(400).json(validateSku);
+    if (Object.keys(validateSku(req)).length)
+        return res.status(400).json(validateSku(req));
 
     try {
-        const size = new SkuMaster(req.body);
+        const sku = new SkuMaster(req.body);
 
-        const savedSize = await size.save();
-        res.json({ data: savedSize, error: {} })
+        const savedSku = await sku.save();
+        res.json({ data: savedSku, error: {} });
 
     } catch (err) {
         res.json({ message: err })
@@ -44,17 +62,25 @@ router.post('/add', async (req, res) => {
 
 
 //UPDATING A SKU
-router.patch('/update/:sizeCode', async (req, res) => {
+router.patch('/update/:skuCode', async (req, res) => {
 
-    const validateSku = skus.validateSku(req);
-    if (Object.keys(validateSku).length)
-        return res.status(400).json(validateSku);
+    if (Object.keys(validateSku(req)).length)
+        return res.status(400).json(validateSku(req));
+
+    const sku = await SkuMaster.findOne({ clientId: clientId, skuCode: req.params.skuCode });
+    if (!sku)
+        return res.status(400).json({
+            data: null,
+            error: notClientIdAndSkuCode(req.params.SkuMaster, clientId)
+        });
+
+
 
     try {
-        const updatedSize = await SkuMaster.findOneAndUpdate({ styleCode: req.params.sizeCode }, req.body);
-        res.json({ data: updatedSize, error: {} })
+        const updatedSku = await SkuMaster.findOneAndUpdate({ skuCode: req.params.skuCode }, req.body);
+        res.json({ data: updatedSku, error: {} });
     } catch (err) {
-        res.json({ message: err })
+        res.json({ message: err });
     }
 
 })

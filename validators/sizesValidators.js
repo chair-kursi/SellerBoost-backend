@@ -1,8 +1,32 @@
+const getSizeEntity = (req) => {
+	let entity = {};
+
+	if (req.body.sizeCode)
+		entity = { ...entity, sizeCode: req.body.sizeCode }
+	else if (req.params.sizeCode)
+		entity = { ...entity, sizeCode: req.params.sizeCode }//ASK: What if the styleCode is neither in req.params.styleCode nor in req.body.styleCode??
+
+
+
+
+	entity = {
+		...entity,
+		name: req.body.name
+	}
+
+	return entity;
+}
+
+
+
+
 validateSize = function (req) {
+
+	const sizeEntity = getSizeEntity(req);
 
 	const validateSizeCode = (code) => {
 		if (!code)
-			return "";
+			return "Invalid SizeCode, it can't be EMPTY!!";
 
 		if (code.length > 20 || code.length < 3)
 			return "Invalid SizeCode, try again!!";
@@ -19,9 +43,9 @@ validateSize = function (req) {
 		return "";
 	}
 
-    const validateName = (name) => { 
+	const validateName = (name) => {
 		if (!name)
-			return "";
+			return "Invalid Name, it can't be EMPTY!!";
 
 		if (name.length > 50 || name.length < 3)
 			return "Invalid name, try again!!";
@@ -32,39 +56,39 @@ validateSize = function (req) {
 			if (!(c > 47 && c < 58) &&
 				!(c > 64 && c < 91) &&
 				!(c > 96 && c < 123) && // lower alpha (a-z) ) { 
-				s !== ' ' && 
-				s !== ':' && 
-				s !== '-' && 
-				s !== '_' && 
-				s !== '.' && 
-				s !== ']' && 
-				s !== '[' && 
-				s !== '}' && 
-				s !== '{' && 
-				s !== ')' && 
-				s !== '(') { 
+				s !== ' ' &&
+				s !== ':' &&
+				s !== '-' &&
+				s !== '_' &&
+				s !== '.' &&
+				s !== ']' &&
+				s !== '[' &&
+				s !== '}' &&
+				s !== '{' &&
+				s !== ')' &&
+				s !== '(') {
 				return "Invalid name, try again!!";
 			}
 		}
 
 		return "";
 	}
- 
+
 
 	var locator = [];
-	const sizeCodeErr = validateSizeCode(req.body.sizeCode)
-	const nameErr = validateName(req.body.name);  
+	const sizeCodeErr = validateSizeCode(sizeEntity.sizeCode);
+	const nameErr = validateName(sizeEntity.name);
 
-	if (req.body.sizeCode && sizeCodeErr.length)
+	if (sizeCodeErr.length)
 		locator = [...locator, {
 			id: "sizeCode",
 			message: sizeCodeErr
 		}];
-	if (req.body.name && nameErr.length)
+	if (nameErr.length)
 		locator = [...locator, {
 			id: "name",
 			message: nameErr
-		}]; 
+		}];
 
 	let response = {};
 	if (locator.length) {
@@ -75,7 +99,7 @@ validateSize = function (req) {
 				errorCode: "GenEx",
 				httpStatus: 400,
 				locator: locator,
-				internalMessage: "Handler dispatch failed; nested exception is java.lang.Error: Unresolved compilation problem: \n\tSyntax error, insert \";\" to complete ReturnStatement\n",
+				internalMessage: "Validation Error",
 				timeStamp: timeStamp
 			}
 		}
@@ -84,8 +108,8 @@ validateSize = function (req) {
 	return response;
 
 }
- 
- 
+
+
 
 module.exports = {
 	validateSize

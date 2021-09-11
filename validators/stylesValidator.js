@@ -1,11 +1,35 @@
-// const { check, validationResult, body } = require('express-validator')
 const URL = require("url").URL;
+
+
+const getStyleEntity = (req) => {
+	let entity = {};
+
+	if (req.body.styleCode)
+		entity = { ...entity, styleCode: req.body.styleCode }
+	else if (req.params.styleCode)
+		entity = { ...entity, styleCode: req.params.styleCode }//ASK: What if the styleCode is neither in req.params.styleCode nor in req.body.styleCode??
+
+
+
+	entity = {
+		...entity,
+		name: req.body.name,
+		frontImageUrl: req.body.frontImageUrl,
+		backImageUrl: req.body.backImageUrl,
+		zoomImageUrl: req.body.zoomImageUrl
+	}
+
+	return entity;
+}
+
 
 validateStyle = function (req) {
 
+	const styleEntity = getStyleEntity(req);
+
 	const validateStyleCode = (code) => {
 		if (!code)
-			return "";
+			return "Invalid StyleCode, StyleCode cannot be EMPTY.";
 
 		if (code.length > 20 || code.length < 3)
 			return "Invalid StyleCode, try again!!";
@@ -21,10 +45,10 @@ validateStyle = function (req) {
 		}
 		return "";
 	}
-	// if(!validator.isAlphanumeric(s[i]) && s[i]!==':' && s[i]!=='-' && s[i]!=='_' && s[i]!=='.' && s[i]!==']' && s[i]!=='[' && s[i]!=='}' && s[i]!=='{' && s[i]!==')' && s[i]!=='(')
-	const validateName = (name) => { 
+
+	const validateName = (name) => {
 		if (!name)
-			return "";
+			return "Invalid Name, it cannot be EMPTY.";
 
 		if (name.length > 100 || name.length < 5)
 			return "Invalid name, try again!!";
@@ -35,17 +59,17 @@ validateStyle = function (req) {
 			if (!(c > 47 && c < 58) &&
 				!(c > 64 && c < 91) &&
 				!(c > 96 && c < 123) && // lower alpha (a-z) ) { 
-				s !== ' ' && 
-				s !== ':' && 
-				s !== '-' && 
-				s !== '_' && 
-				s !== '.' && 
-				s !== ']' && 
-				s !== '[' && 
-				s !== '}' && 
-				s !== '{' && 
-				s !== ')' && 
-				s !== '(') { 
+				s !== ' ' &&
+				s !== ':' &&
+				s !== '-' &&
+				s !== '_' &&
+				s !== '.' &&
+				s !== ']' &&
+				s !== '[' &&
+				s !== '}' &&
+				s !== '{' &&
+				s !== ')' &&
+				s !== '(') {
 				return "Invalid name, try again!!";
 			}
 		}
@@ -55,7 +79,7 @@ validateStyle = function (req) {
 
 	const validateUrl = (url) => {
 		if (!url)
-			return "";
+			return "";//this is empty as the imgUrls are optional
 
 		try {
 			new URL(url);
@@ -66,12 +90,12 @@ validateStyle = function (req) {
 	};
 
 	var locator = [];
-	const styleCodeErr = validateStyleCode(req.body.styleCode)
-	const nameErr = validateName(req.body.name);
-	const frontImageUrlErr = validateUrl(req.body.frontImageUrl)
-	const backImageUrlErr = validateUrl(req.body.backImageUrl)
-	const zoomImageUrlErr = validateUrl(req.body.zoomImageUrl)
-	// const hasSizeErr = ((req.body.hasSize && req.body.hasSize.toLowerCase() === "true") || (req.body.hasSize && req.body.hasSize.toLowerCase() === "false"))
+	const styleCodeErr = validateStyleCode(styleEntity.styleCode)
+	const nameErr = validateName(styleEntity.name);
+	const frontImageUrlErr = validateUrl(styleEntity.frontImageUrl)
+	const backImageUrlErr = validateUrl(styleEntity.backImageUrl)
+	const zoomImageUrlErr = validateUrl(styleEntity.zoomImageUrl) 
+	//not validating hasSize as it is by default handeled by schema
 
 
 
