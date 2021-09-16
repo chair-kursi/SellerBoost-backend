@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const cors = require('cors')
 require('dotenv/config')
 const app = express();
+const port = process.env.PORT || 3002;
+
 
 //IMPORTING ROUTES
 const styleRouter = require('./routes/styles')
@@ -18,6 +20,23 @@ const stylePlanRouter = require('./routes/stylePlans')
 app.use(cors())
 app.use(express.json());
 
+app.get('/api/styletraffic', async (req, res) => {
+    let styleCode = ["SB-000297", "SB-000127", "SB-000328", "SB-000319", "SB-000078", "SB-000275", "SB-000257", "SB-000395", "SB-000337"],
+        trafficActual = ["RED", "SOLUT", "SOLUT", "SOLUT", "ORANGE", "OverGreen", "GREEN", "SOLUT", "SOLUT"],
+        currentInv = [1140, 283, 139, 76, 638, 210, 298, 6, 179],
+        salesNumber = [1864, 1124, 318, 171, 385, 17, 17, 32, 116],
+        salesRank = [1, 2, 4, 5, 3, 8, 8, 7],
+        mockData = {
+            styleCode: styleCode,
+            trafficActual: trafficActual,
+            currentInv: currentInv,
+            salesNumber: salesNumber,
+            salesRank: salesRank
+
+        }
+    res.send(mockData)
+})
+
 
 //USING ROUTES AS A MIDDLEWARE
 app.use('/style', styleRouter)
@@ -27,6 +46,10 @@ app.use('/', globalSizeRouter)
 app.use('/', stylePropMasterRouter)
 app.use('/', skuPlanRouter)
 app.use('/', stylePlanRouter)
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('client/build'));
+}
 
 
 
@@ -40,4 +63,4 @@ mongoose.connect(process.env.DB_CONNECTION,
     .then(() => console.log("Database connected!"))
     .catch(err => console.log(err));
 
-app.listen(3002)
+app.listen(port)
