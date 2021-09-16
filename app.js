@@ -5,6 +5,9 @@ require('dotenv/config')
 const app = express();
 const port = process.env.PORT || 3002;
 
+//CSV UPLOAD 
+const csvParser = require("csv-parse")
+const fs = require("fs")
 
 //IMPORTING ROUTES
 const styleRouter = require('./routes/styles')
@@ -21,21 +24,26 @@ app.use(cors())
 app.use(express.json());
 
 app.get('/api/styletraffic', async (req, res) => {
+    let styletraffic = [];
     let styleCode = ["SB-000297", "SB-000127", "SB-000328", "SB-000319", "SB-000078", "SB-000275", "SB-000257", "SB-000395", "SB-000337"],
         trafficActual = ["RED", "SOLUT", "SOLUT", "SOLUT", "ORANGE", "OverGreen", "GREEN", "SOLUT", "SOLUT"],
         currentInv = [1140, 283, 139, 76, 638, 210, 298, 6, 179],
         salesNumber = [1864, 1124, 318, 171, 385, 17, 17, 32, 116],
-        salesRank = [1, 2, 4, 5, 3, 8, 8, 7],
-        mockData = {
-            styleCode: styleCode,
-            trafficActual: trafficActual,
-            currentInv: currentInv,
-            salesNumber: salesNumber,
-            salesRank: salesRank
-
+        salesRank = [1, 2, 4, 5, 3, 8, 8, 7, 6]
+    for (let i = 0; i < styleCode.length; i++) {
+        styletrafficData = {
+            styleCode: styleCode[i],
+            trafficActual: trafficActual[i],
+            currentInv: currentInv[i],
+            salesNumber: salesNumber[i],
+            salesRank: salesRank[i]
         }
-    res.send(mockData)
+        styletraffic = [...styletraffic, styletrafficData]
+    }
+    res.send(styletraffic)
 })
+
+
 
 
 //USING ROUTES AS A MIDDLEWARE
