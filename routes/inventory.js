@@ -9,7 +9,7 @@ const results = [];
 
 
 
-router.post('/uploadinventory', async (req, res) => {
+router.post('/upload-inventory', (req, res) => {
     fs.createReadStream("sample.csv")
     .pipe(csvParser({}))
     .on("data", (data) => results.push(data))
@@ -18,7 +18,7 @@ router.post('/uploadinventory', async (req, res) => {
         console.log(result);
         res.json(result);}
         catch(err){
-            res.json({message: err})
+            res.json({message: err});
         }
     })
     

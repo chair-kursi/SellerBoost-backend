@@ -44,9 +44,9 @@ app.get('/api/styletraffic', async (req, res) => {
 })
 
 
-// app.post("/api/uploadinventory", async (req, res) => {
-//     console.log("req.files", req.files)
-// })
+app.post("/api/uploadinventory", async (req, res) => {
+    console.log("req.files", req.files)
+})
 
 
 
