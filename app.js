@@ -6,8 +6,7 @@ const app = express();
 const port = process.env.PORT || 3002;
 
 //CSV UPLOAD 
-const csvParser = require("csv-parse")
-const fs = require("fs")
+
 
 //IMPORTING ROUTES
 const styleRouter = require('./routes/styles')
@@ -17,6 +16,7 @@ const skuMasterRouter = require('./routes/skuMasters')
 const stylePropMasterRouter = require('./routes/stylePropMasters')
 const skuPlanRouter = require('./routes/skuPlans')
 const stylePlanRouter = require('./routes/stylePlans')
+const inventoryRouter = require('./routes/inventory')
 
 
 //MIDDLEWARES
@@ -44,6 +44,10 @@ app.get('/api/styletraffic', async (req, res) => {
 })
 
 
+// app.post("/api/uploadinventory", async (req, res) => {
+//     console.log("req.files", req.files)
+// })
+
 
 
 //USING ROUTES AS A MIDDLEWARE
@@ -54,6 +58,7 @@ app.use('/', globalSizeRouter)
 app.use('/', stylePropMasterRouter)
 app.use('/', skuPlanRouter)
 app.use('/', stylePlanRouter)
+app.use('/api', inventoryRouter)
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('client/build'));
