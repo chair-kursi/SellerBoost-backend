@@ -4,7 +4,7 @@ const inventorySchema = mongoose.Schema({
     StyleCode: {
         type: String,
         // required: true,
-        unique: true
+        // unique: true
     },
     TrafficActual:{
         type: String,
