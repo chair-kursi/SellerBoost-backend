@@ -3,12 +3,12 @@ const mongoose = require("mongoose")
 const inventorySchema = mongoose.Schema({ 
     StyleCode: {
         type: String,
-        required: true,
+        // required: true,
         unique: true
     },
     TrafficActual:{
         type: String,
-        required: true
+        // required: true
     },
     CurrentInv:{
         type: Number,
