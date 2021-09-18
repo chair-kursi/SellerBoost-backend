@@ -25,15 +25,15 @@ const fs = require("fs");
 const results = [];
 
 
-router.post('/upload-inventory', upload.single('csvFile'), (req, res) => {
-    console.log(req.file);
+router.post('/upload-inventory', upload.single('csvFile'), (req, res) => { 
+    console.log(req.file.path);
     fs.createReadStream(req.file.path)
         .pipe(csvParser({}))
         .on("data", (data) => results.push(data))
         .on('end', async () => {
             try {
                 const result = await Inventory.insertMany(results);
-                console.log(result);
+                // console.log(result);
                 res.json(result);
             }
             catch (err) {
