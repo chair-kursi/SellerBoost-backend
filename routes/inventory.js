@@ -32,9 +32,10 @@ router.post('/upload-inventory', upload.single('csvFile'), (req, res) => {
         .on("data", (data) => results.push(data))
         .on('end', async () => {
             try {
+                console.log(results);
                 const result = await Inventory.insertMany(results);
                 // console.log(result);
-                res.json(result);
+                res.json(results);
             }
             catch (err) {
                 res.json({ message: err });
