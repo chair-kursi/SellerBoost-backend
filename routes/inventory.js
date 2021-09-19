@@ -10,7 +10,7 @@ const fileStorageEngine = multer.diskStorage({
         cb(null, "./csvFiles");
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + "__" + file.originalname);
+        cb(null, Date.now() + file.originalname);
     }
 })
 
@@ -26,13 +26,13 @@ const results = [];
 
 
 router.post('/upload-inventory', upload.single('csvFile'), (req, res) => { 
-    console.log(req.file.path);
-    fs.createReadStream(req.file.path)
+    // console.log(req.file);
+    fs.createReadStream("csvFiles/"+req.file.filename)
         .pipe(csvParser({}))
         .on("data", (data) => results.push(data))
         .on('end', async () => {
             try {
-                console.log(results);
+                // console.log(results);
                 const result = await Inventory.insertMany(results);
                 // console.log(result);
                 res.json(results);
@@ -44,4 +44,4 @@ router.post('/upload-inventory', upload.single('csvFile'), (req, res) => {
 })
 
 
-module.exports = router;
+module.exports = router; 
