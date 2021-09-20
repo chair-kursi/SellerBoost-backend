@@ -5,7 +5,6 @@ require('dotenv/config')
 const app = express();
 const port = process.env.PORT || 3002;
 
-//CSV UPLOAD 
 
 
 //IMPORTING ROUTES
@@ -17,10 +16,11 @@ const stylePropMasterRouter = require('./routes/stylePropMasters')
 const skuPlanRouter = require('./routes/skuPlans')
 const stylePlanRouter = require('./routes/stylePlans')
 const inventoryRouter = require('./routes/inventory')
+const skuTrafficRouter = require('./routes/skuTraffic')
 
 
 //MIDDLEWARES
-app.use(cors())
+app.use(cors());
 app.use(express.json());
 
 app.get('/api/styletraffic', async (req, res) => {
@@ -45,7 +45,6 @@ app.get('/api/styletraffic', async (req, res) => {
  
 
 
-
 //USING ROUTES AS A MIDDLEWARE
 app.use('/style', styleRouter)
 app.use('/sku', skuMasterRouter)
@@ -55,6 +54,7 @@ app.use('/', stylePropMasterRouter)
 app.use('/', skuPlanRouter)
 app.use('/', stylePlanRouter)
 app.use('/api', inventoryRouter)
+app.use('/api', skuTrafficRouter) 
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('client/build'));

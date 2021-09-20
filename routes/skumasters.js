@@ -47,14 +47,16 @@ router.get('/:skuCode', async (req, res) => {
 router.post('/add', async (req, res) => {
 
     if (Object.keys(validateSku(req)).length)
-        return res.status(400).json(validateSku(req));
-
+    return res.status(400).json(validateSku(req));
+    
     try {
         const sku = new SkuMaster(req.body);
-
+        
+        console.log("req.body1", sku);
         const savedSku = await sku.save();
         res.json({ data: savedSku, error: {} });
-
+        console.log("req.body2", req.body);
+        
     } catch (err) {
         res.json({ message: err })
     }

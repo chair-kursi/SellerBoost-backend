@@ -27,12 +27,13 @@ const results = [];
 
 router.post('/upload-inventory', upload.single('csvFile'), (req, res) => { 
     // console.log(req.file);
-    fs.createReadStream("csvFiles/"+req.file.filename)
-        .pipe(csvParser({}))
+    fs.createReadStream("sample.csv")
+        .pipe(csvParser())
         .on("data", (data) => results.push(data))
         .on('end', async () => {
+
+            console.log(results.length);
             try {
-                // console.log(results);
                 const result = await Inventory.insertMany(results);
                 // console.log(result);
                 res.json(results);
