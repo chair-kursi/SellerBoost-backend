@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Inventory = require("../models/Inventory");
+const SkuSales = require("../models/SkuSales");
 const csvParser = require("csv-parser");
 const multer = require("multer");
 
@@ -18,14 +18,14 @@ const upload = multer({ storage: fileStorageEngine });
 const fs = require("fs");
 const results = [];
 
-router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
+router.post("/skuSales", upload.single("csvFile"), (req, res) => {
   console.log(req.file.path);
   fs.createReadStream(req.file.path)
     .pipe(csvParser({}))
     .on("data", (data) => results.push(data))
     .on("end", async () => {
       try {
-        const result = await Inventory.insertMany(results);
+        const result = await SkuSales.insertMany(results);
         // console.log(result);
         res.json(result);
       } catch (err) {
