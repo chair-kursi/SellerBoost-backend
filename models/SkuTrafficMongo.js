@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const skuMasterSchema = mongoose.Schema({
+const skuTrafficSchema = mongoose.Schema({
     clientID: {
         type: String,
         default: "StyloBug"
@@ -10,16 +10,24 @@ const skuMasterSchema = mongoose.Schema({
         // required: true,
         // unique: true
     },
+    styleCode: {
+        type: String,
+        // unique: true
+    },
     sizeCode: {
         type: String,
         // unique: true
     },
-    barCode: {
+    day_Inventory: {
         type: String,
         // unique: true
     },
-    styleCode: {
-        type: String,
+    sales: {
+        type: Number,
+        // unique: true
+    },
+    inventory: {
+        type: Number,
         // unique: true
     },
     created: {
@@ -32,4 +40,4 @@ const skuMasterSchema = mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model("skuMaster", skuMasterSchema)
+module.exports = mongoose.model("skuTraffic", skuTrafficSchema)

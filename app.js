@@ -17,6 +17,7 @@ const skuPlanRouter = require("./routes/skuPlans");
 const stylePlanRouter = require("./routes/stylePlans");
 const inventoryRouter = require("./routes/inventory");
 const skuSalesRouter = require("./routes/skuSales");
+const skuTrafficRouter = require("./routes/skuTraffic");
 
 //MIDDLEWARES
 app.use(cors());
@@ -72,6 +73,7 @@ app.use("/", skuPlanRouter);
 app.use("/", stylePlanRouter);
 app.use("/api", inventoryRouter);
 app.use("/api", skuSalesRouter);
+app.use("/api", skuTrafficRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
