@@ -7,7 +7,9 @@ const SkuTraffic = require('../models/SkuTrafficMongo');
 const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
 
 
-router.post("/")
+router.get("/findAll", async(req, res)=>{
+    // const
+})
 
 
 module.exports = router;

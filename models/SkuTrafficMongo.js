@@ -5,28 +5,68 @@ const skuTrafficSchema = mongoose.Schema({
         type: String,
         default: "StyloBug"
     },
-    skuCode: {
+    SkuCode: {
         type: String,
         // required: true,
         // unique: true
     },
-    styleCode: {
+    StyleCode: {
         type: String,
         // unique: true
     },
-    sizeCode: {
+    SizeCode: {
         type: String,
         // unique: true
     },
-    day_Inventory: {
-        type: String,
-        // unique: true
-    },
-    sales: {
+    DayOfInventory: {
         type: Number,
         // unique: true
     },
-    inventory: {
+    TotalSales: {
+        type: Number,
+        // unique: true
+    },
+    dayInventoryVirtual: {
+        type: Number,
+        // unique: true
+    },
+    dayInventory: {
+        type: Number,
+        // unique: true
+    },
+    trafficColor: {
+        type: String,
+        // unique: true
+    },
+    trafficShortCode: {
+        type: String,
+        // unique: true
+    },
+    trafficShortCodeVirtual: {
+        type: String,
+        // unique: true
+    },
+    skuTrafficCode: {
+        type: String,
+        // unique: true
+    },
+    skuTrafficCodeVirtual: {
+        type: String,
+        // unique: true
+    },
+    suggestedInventory1: {
+        type: Number,
+        // unique: true
+    },
+    suggestedInventory2: {
+        type: Number,
+        // unique: true
+    },
+    suggestedInventory3: {
+        type: Number,
+        // unique: true
+    }, 
+    Inventory: {
         type: Number,
         // unique: true
     },

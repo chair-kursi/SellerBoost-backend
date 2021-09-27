@@ -1,16 +1,20 @@
 const mongoose = require("mongoose");
 
 const inventorySchema = mongoose.Schema({
-  Facility: {
+  clientId: {
+    type: String,
+    default: "StyloBug"
+  },
+  facility: {
     type: String,
     // required: true,
     // unique: true
   },
-  ItemTypeName: {
+  itemTypeName: {
     type: String,
     // required: true
   },
-  ItemSkuCode: {
+  itemSkuCode: {
     type: String,
     // required: true
   },
@@ -23,54 +27,54 @@ const inventorySchema = mongoose.Schema({
   ISBN: {
     type: Number,
   },
-  Color: {
+  color: {
     type: String,
   },
-  Size: {
+  size: {
     type: String,
   },
-  Brand: {
+  brand: {
     type: String,
   },
-  CategoryName: {
+  categoryName: {
     type: String,
   },
   MRP: {
     type: Number,
   },
-  OpenSale: {
+  openSale: {
     type: Number,
   },
-  Inventory: {
+  inventory: {
     type: Number,
   },
-  InventoryBlocked: {
+  inventoryBlocked: {
     type: Number,
   },
-  BadInventory: {
+  badInventory: {
     type: Number,
   },
-  PutwayPending: {
+  putawayPending: {
     type: Number,
   },
-  PendingInventoryAssessment: {
+  pendingInventoryAssessment: {
     type: Number,
   },
-  StockInTransfer: {
+  stockInTransfer: {
     type: Number,
   },
-  OpenPurchase: {
+  openPurchase: {
     type: Number,
   },
-  Enabled: {
-    type: Boolean,
+  enabled: {
+    type: String,
   },
-  Created: {
+  costPrice: {
+    type: Number,
+  },
+  created: {
     type: Date,
     default: Date.now,
-  },
-  CostPrice: {
-    type: Number,
   },
   updated: {
     type: Date,

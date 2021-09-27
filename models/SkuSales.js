@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const SkuSalesSchema = mongoose.Schema({
+  clientId: {
+    type: String,
+    default: "StyloBug"
+  },
   SkuCode: {
     type: String,
     // required: true,
@@ -21,6 +25,14 @@ const SkuSalesSchema = mongoose.Schema({
     // required: true,
     // unique: true
   },
+  created: {
+    type: Date,
+    default: Date.now()
+  },
+  updated: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
 module.exports = mongoose.model("SkuSales", SkuSalesSchema);
