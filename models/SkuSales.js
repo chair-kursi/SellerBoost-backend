@@ -5,25 +5,28 @@ const SkuSalesSchema = mongoose.Schema({
     type: String,
     default: "StyloBug"
   },
-  SkuCode: {
+  skuCode: {
     type: String,
     // required: true,
     // unique: true
   },
-  Name: {
+  name: {
     type: String,
     // required: true,
     // unique: true
   },
-  TotalSales: {
+  inventory: {
     type: Number,
     // required: true,
     // unique: true
   },
-  DayOfInventory: {
+  totalSales: {
     type: Number,
     // required: true,
     // unique: true
+  },
+  dayOfInventory: {
+    type: Number,
   },
   created: {
     type: Date,

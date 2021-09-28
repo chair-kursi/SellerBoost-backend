@@ -65,7 +65,7 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
         })
       })
     }
-    download(req.body.fileUrl, "csvFiles/" + Date.now() + "INVENTORY");
+    download(req.body.fileUrl, "csvFiles/INVENTORY" + Date.now());
   }
   else if (req.file && req.file.path) {
     fs.createReadStream(req.file.path)

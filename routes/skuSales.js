@@ -3,30 +3,45 @@ const router = express.Router();
 const SkuSales = require("../models/SkuSales");
 const csvParser = require("csv-parser");
 var https = require('https');
+const multer = require("multer");
 
+
+const fileStorageEngine = multer.diskStorage({
+  destination: (res, file, cb) => {
+    cb(null, "./csvFiles");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "__" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: fileStorageEngine });
 const fs = require("fs");
 
-router.post("/skuSales", (req, res) => {
+
+router.post("/skuSales", upload.single("csvFile"), (req, res) => {
   const results = [];
-  var download = function (url, dest, cb) {
+  var download = function (url, dest) {
     var file = fs.createWriteStream(dest);
     https.get(url, function (response) {
       response.pipe(file);
       file.on('finish', function () {
         fs.createReadStream(dest)
           .pipe(csvParser({}))
-          .on("data", (data) => {
-
+          .on("data", (data) => { 
             let obj = {
-               
+              skuCode: data["Sku Code"],
+              name: data["Name"],
+              inventory: data["Inventory"],
+              totalSales: data["Total Sales"],
+              dayOfInventory: data["Day Of Inventory"] 
             }
-            results.push(data);
+            results.push(obj);
           })
           .on("end", async () => {
             try {
-              // const result = await SkuSales.insertMany(results);
-              // res.json(result);
-              res.json(results);
+              const result = await SkuSales.insertMany(results);
+              res.json(result);
             } catch (err) {
               res.json({ message: err });
             }
@@ -34,8 +49,26 @@ router.post("/skuSales", (req, res) => {
       });
     });
   }
-  download(req.body.fileUrl, "csvFiles/" + Date.now() + "CSV")
-
+  if (req.body.fileUrl) {
+    download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now())
+  }
+  else if (req.file && req.file.path) {
+    fs.createReadStream(req.file.path)
+      .pipe(csvParser({}))
+      .on("data", (data) => {
+        results.push(data);
+      })
+      .on("end", async () => {
+        try {
+          // const result = await SkuSales.insertMany(results);
+          // res.json(result);
+          res.json(results);
+        } catch (err) {
+          res.json({ message: err });
+        }
+      });
+  }
+  else res.send("Nothing")
 });
 
 module.exports = router;

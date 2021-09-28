@@ -6,7 +6,7 @@ const SkuMaster = require('../models/SkuMaster');
 const Inventory = require("../models/Inventory");
 const { getClientId } = require("../services/getClientId");
 const SkuTrafficMongo = require("../models/SkuTrafficMongo");
-
+const json2csv = require("json2csv");
 
 const clientId = getClientId();
 
@@ -226,13 +226,14 @@ router.get("/itemMaster", async (req, res) => {
 
             //STORING UNIQUE STYLECODES -----END
 
-            if (skuInventoryData)
-                inventory = skuInventoryData.Inventory;
+            if (skuInventoryData && skuInventoryData.inventory)
+                inventory = skuInventoryData.inventory;
 
-            if (skuSalesData) {
-                TotalSales = skuSalesData.TotalSales;
-                DayOfInventory = skuSalesData.DayOfInventory;
-            }
+            if (skuSalesData && skuSalesData.totalSales)
+                TotalSales = skuSalesData.totalSales;
+            if (skuSalesData && skuSalesData.dayOfInventory)
+                DayOfInventory = skuSalesData.dayOfInventory;
+
 
             const prevInventory = totalInventoryOfStylecode.get(styleCode);
             const prevSales = totalSalesOfStylecode.get(styleCode);
@@ -246,7 +247,12 @@ router.get("/itemMaster", async (req, res) => {
             else totalSalesOfStylecode.set(styleCode, prevSales + TotalSales)
 
 
-            const dayInventory = Math.round((inventory * 30) / (TotalSales ? TotalSales : 0.2));
+            let dayInventory = 0;
+            if (TotalSales)
+                dayInventory = Math.round((inventory * 30) / TotalSales);
+            else
+                dayInventory = Math.round((inventory * 30) / 0.2);
+                
             const trafficColor = giveTrafficColor(dayInventory, inventory);
             const trafficShortCode = getTrafficShortCode(trafficColor);
             const skuTrafficCode = trafficShortCode + "_" + dayInventory + "D_" + inventory + "C_" + TotalSales + "S#";
@@ -261,12 +267,12 @@ router.get("/itemMaster", async (req, res) => {
 
             let skuData = {
                 clientId: clientId,
-                SkuCode: skuCode,
-                StyleCode: styleCode,
-                SizeCode: sizeCode,
-                TotalSales: TotalSales,
-                DayOfInventory: DayOfInventory,
-                Inventory: inventory,
+                skuCode: skuCode,
+                styleCode: styleCode,
+                sizeCode: sizeCode,
+                totalSales: TotalSales,
+                dayOfInventory: DayOfInventory,
+                inventory: inventory,
                 inventoryVirtual: inventory,
                 dayInventory: dayInventory,
                 dayInventoryVirtual: dayInventory,
@@ -296,7 +302,7 @@ router.get("/itemMaster", async (req, res) => {
         for (let i = 0; i < styleCodeArr.length; i++) {
             let styleCode = styleCodeArr[i],
                 currentInv = totalInventoryOfStylecode.get(styleCode),
-                salesNumber = totalSalesOfStylecode.get(styleCode)
+                salesNumber = totalSalesOfStylecode.get(styleCode);
 
 
             let obj = {
@@ -315,7 +321,13 @@ router.get("/itemMaster", async (req, res) => {
         const dashboard = await Service.insertMany(finalArray);
 
 
-
+        // json2csv({ data: dashboard, fields: ["Facility", "Item Type Name", "Item SkuCode", "EAN", "UPC", "ISBN", "Color", "Size", "Brand", "Category Name", "MRP", "Open Sale", "Inventory", "Inventory Blocked", "Bad Inventory", "Putaway Pending", "Pending Inventory Assessment", "Stock In Transfer", "Open Purchase", "Enabled", "Cost Price"] }, function (err, csv) {
+        //     if (err) console.log(err);
+        //     fs.writeFile('file.csv', csv, function (err) {
+        //         if (err) throw err;
+        //         console.log('file saved');
+        //     });
+        // });
         res.json({ data: dashboard, error: null });
 
 
