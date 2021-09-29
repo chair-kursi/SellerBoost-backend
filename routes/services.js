@@ -6,8 +6,8 @@ const SkuMaster = require('../models/SkuMaster');
 const Inventory = require("../models/Inventory");
 const { getClientId } = require("../services/getClientId");
 const SkuTrafficMongo = require("../models/SkuTrafficMongo");
-const json2csv = require("json2csv");
-
+const { Parser } = require("json2csv");
+const fs = require("fs");
 const clientId = getClientId();
 
 //DEFINING CONSTATNTS
@@ -205,7 +205,7 @@ const setTrafficColor = (colorCount) => {
 
 
 
-router.get("/itemMaster", async (req, res) => {
+router.post("/itemMaster", async (req, res) => {
 
     try {
         const allSkus = await SkuMaster.find({ clientId: clientId });
@@ -252,7 +252,7 @@ router.get("/itemMaster", async (req, res) => {
                 dayInventory = Math.round((inventory * 30) / TotalSales);
             else
                 dayInventory = Math.round((inventory * 30) / 0.2);
-                
+
             const trafficColor = giveTrafficColor(dayInventory, inventory);
             const trafficShortCode = getTrafficShortCode(trafficColor);
             const skuTrafficCode = trafficShortCode + "_" + dayInventory + "D_" + inventory + "C_" + TotalSales + "S#";
@@ -319,22 +319,36 @@ router.get("/itemMaster", async (req, res) => {
         }
         finalArray.sort((a, b) => { return a.salesRank - b.salesRank })
         const dashboard = await Service.insertMany(finalArray);
-
-
-        // json2csv({ data: dashboard, fields: ["Facility", "Item Type Name", "Item SkuCode", "EAN", "UPC", "ISBN", "Color", "Size", "Brand", "Category Name", "MRP", "Open Sale", "Inventory", "Inventory Blocked", "Bad Inventory", "Putaway Pending", "Pending Inventory Assessment", "Stock In Transfer", "Open Purchase", "Enabled", "Cost Price"] }, function (err, csv) {
-        //     if (err) console.log(err);
-        //     fs.writeFile('file.csv', csv, function (err) {
-        //         if (err) throw err;
-        //         console.log('file saved');
-        //     });
-        // });
-        res.json({ data: dashboard, error: null });
-
-
     }
     catch (err) {
         res.json({ message: err });
     }
 })
+
+router.get("/itemMaster", async (req, res) => {
+    try {
+        const dashBoard = await Service.find({ clientId: clientId })
+        res.json({ data: dashBoard, error: null });
+    }
+    catch (err) {
+        res.json({ data: null, error: err })
+    }
+})
+
+router.get("/exportCsv", async (req, res) => {
+    const dashboard = await Service.find({ clientId: clientId })
+    const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
+    const opts = { fields };
+    try {
+        const parser = new Parser(opts);
+        const csv = parser.parse(dashboard);
+        res.attachment('data.csv');
+        res.status(200).send(csv);
+    } catch (err) {
+        console.error(err);
+    }
+})
+
+
 
 module.exports = router;

@@ -4,6 +4,7 @@ const SkuSales = require("../models/SkuSales");
 const csvParser = require("csv-parser");
 var https = require('https');
 const multer = require("multer");
+const fs = require("fs");
 
 
 const fileStorageEngine = multer.diskStorage({
@@ -16,7 +17,6 @@ const fileStorageEngine = multer.diskStorage({
 });
 
 const upload = multer({ storage: fileStorageEngine });
-const fs = require("fs");
 
 
 router.post("/skuSales", upload.single("csvFile"), (req, res) => {

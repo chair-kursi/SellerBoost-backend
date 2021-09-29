@@ -4,6 +4,8 @@ const router = express.Router();
 const Inventory = require("../models/Inventory");
 const csvParser = require("csv-parser");
 const multer = require("multer");
+const fs = require("fs");
+const json2csv = require("json2csv");
 
 const fileStorageEngine = multer.diskStorage({
   destination: (res, file, cb) => {
@@ -16,7 +18,6 @@ const fileStorageEngine = multer.diskStorage({
 
 const upload = multer({ storage: fileStorageEngine });
 
-const fs = require("fs");
 
 router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
   const results = [];
@@ -56,8 +57,21 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
             })
             .on("end", async () => {
               try {
-                const result = await Inventory.insertMany(results);
-                res.json(result);
+                // const result = await Inventory.insertMany(results);
+                var apiDataPull = Promise.resolve([
+                  {
+                    'day': '*date*',
+                    'revenue': '*revenue value*'
+                  }]).then(data => {
+                    return json2csv.parseAsync(data, { fields: ['day', 'revenue', 'totalImpressions', 'eCPM'] })
+                  }).then(csv => {
+                    fs.writeFile('pubmaticData.csv', csv, function (err) {
+                      if (err) throw err;
+                      console.log('File Saved!')
+                    });
+                  });
+                console.log(apiDataPull);
+                // res.json(result);
               } catch (err) {
                 res.json({ message: err });
               }
@@ -99,6 +113,7 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
       .on("end", async () => {
         try {
           const result = await Inventory.insertMany(results);
+
           res.json(result);
         } catch (err) {
           res.json({ message: err });
