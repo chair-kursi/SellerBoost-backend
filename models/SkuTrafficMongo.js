@@ -5,77 +5,81 @@ const skuTrafficSchema = mongoose.Schema({
         type: String,
         default: "StyloBug"
     },
-    SkuCode: {
+    skuCode: {
         type: String,
-        // required: true,
-        // unique: true
+        required: true,
+        unique: true
     },
-    StyleCode: {
+    styleCode: {
         type: String,
-        // unique: true
+        required: true,
+        unique: true
     },
-    SizeCode: {
+    sizeCode: {
         type: String,
-        // unique: true
+        required: true,
+        unique: true
     },
-    DayOfInventory: {
+    dayOfInventory: {
         type: Number,
-        // unique: true
+        required: true
     },
-    TotalSales: {
+    totalSales: {
         type: Number,
-        // unique: true
+        required: true
     },
     dayInventoryVirtual: {
         type: Number,
-        // unique: true
+        required: true
     },
     dayInventory: {
         type: Number,
-        // unique: true
+        required: true
     },
     trafficColor: {
         type: String,
-        // unique: true
+        required: true
     },
     trafficShortCode: {
         type: String,
-        // unique: true
+        required: true
     },
     trafficShortCodeVirtual: {
         type: String,
-        // unique: true
+        required: true
     },
     skuTrafficCode: {
         type: String,
-        // unique: true
+        required: true
     },
     skuTrafficCodeVirtual: {
         type: String,
-        // unique: true
+        required: true
     },
     suggestedInventory1: {
         type: Number,
-        // unique: true
+        required: true
     },
     suggestedInventory2: {
         type: Number,
-        // unique: true
+        required: true
     },
     suggestedInventory3: {
         type: Number,
-        // unique: true
+        required: true
     }, 
     Inventory: {
         type: Number,
-        // unique: true
+        required: true
     },
     created: {
         type: Date,
+        required: true,
         default: Date.now()
     },
     updated: {
         type: Date,
+        required: true,
         default: Date.now()
     }
 })

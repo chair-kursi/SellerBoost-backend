@@ -7,38 +7,40 @@ const styleSchema = mongoose.Schema({
     },
     styleCode: {
         type: String,
-        // required: true,
+        required: true,
         unique: true
     },
     name: {
         type: String,
-        // required: true
+        required: true
     },
     type: {
-        type: String//Ask for this also
+        type: String,
+        required: true
     },
     hasSize: {
         type: Boolean,
-        // required: true
+        required: true
     },
     color: {
         type: String,
-        // required: true
+        required: true
     }, 
     frontImageUrl: {
         type: String,
-        // required: true
+        required: true
     },
     backImageUrl: {
         type: String,
-        // required: true
+        required: true
     },
     zoomImageUrl: {
         type: String,
-        // required: true
+        required: true
     }, 
     barCode: {
-        type: String
+        type: String,
+        required: true
     },
     created: {
         type: Date,

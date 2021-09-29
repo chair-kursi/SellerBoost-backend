@@ -28,13 +28,13 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
       file.on('finish', function () {
         fs.createReadStream(dest)
           .pipe(csvParser({}))
-          .on("data", (data) => { 
+          .on("data", (data) => {
             let obj = {
               skuCode: data["Sku Code"],
               name: data["Name"],
               inventory: data["Inventory"],
               totalSales: data["Total Sales"],
-              dayOfInventory: data["Day Of Inventory"] 
+              dayOfInventory: data["Day Of Inventory"]
             }
             results.push(obj);
           })
@@ -42,6 +42,10 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
             try {
               const result = await SkuSales.insertMany(results);
               res.json(result);
+              fs.unlink(dest, (err) => {//deleting created file
+                if (err) throw err;
+                console.log("deleted");
+              });
             } catch (err) {
               res.json({ message: err });
             }
@@ -60,9 +64,9 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
       })
       .on("end", async () => {
         try {
-          // const result = await SkuSales.insertMany(results);
-          // res.json(result);
-          res.json(results);
+          const result = await SkuSales.insertMany(results);
+          res.json(result);
+          // res.json(results); 
         } catch (err) {
           res.json({ message: err });
         }

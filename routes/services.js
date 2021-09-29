@@ -205,7 +205,7 @@ const setTrafficColor = (colorCount) => {
 
 
 
-router.post("/itemMaster", async (req, res) => {
+router.post("/styleTraffic", async (req, res) => {
 
     try {
         const allSkus = await SkuMaster.find({ clientId: clientId });
@@ -221,7 +221,6 @@ router.post("/itemMaster", async (req, res) => {
             let TotalSales = 0, DayOfInventory = 0, inventory = 0, styleCode = allSkus[i].styleCode, skuCode = allSkus[i].skuCode, sizeCode = allSkus[i].sizeCode;
 
             //STORING UNIQUE STYLECODES -----START
-
             storeUniqueStyleCodes(styleCode);
 
             //STORING UNIQUE STYLECODES -----END
@@ -319,13 +318,14 @@ router.post("/itemMaster", async (req, res) => {
         }
         finalArray.sort((a, b) => { return a.salesRank - b.salesRank })
         const dashboard = await Service.insertMany(finalArray);
+        res.json(dashboard);
     }
     catch (err) {
         res.json({ message: err });
     }
 })
 
-router.get("/itemMaster", async (req, res) => {
+router.get("/styleTraffic", async (req, res) => {
     try {
         const dashBoard = await Service.find({ clientId: clientId })
         res.json({ data: dashBoard, error: null });
@@ -336,19 +336,28 @@ router.get("/itemMaster", async (req, res) => {
 })
 
 router.get("/exportCsv", async (req, res) => {
-    const dashboard = await Service.find({ clientId: clientId })
+    const dashboard = await Service.find({ clientId: clientId });
     const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
     const opts = { fields };
     try {
         const parser = new Parser(opts);
         const csv = parser.parse(dashboard);
-        res.attachment('data.csv');
-        res.status(200).send(csv);
+        fs.writeFile("csvFiles/csv.csv", csv, function (err) {
+            if (err)
+                throw err;
+            // res.attachment("csvFiles/csv.csv")
+            res.send('<a href="/public/csv.csv" download="csv.csv" id="download-link"></a><script>document.getElementById("download-link").click();</script>');
+            console.log("file Saved");
+            // fs.unlink('csvFiles/EXPORT_CSV.csv', (err) => {
+            //     if (err) throw err;
+            //     console.log('csvFiles/EXPORT_CSV.csv was deleted');
+            // })
+        });
+        // res.status(200).send(csv);
     } catch (err) {
         console.error(err);
     }
 })
-
 
 
 module.exports = router;

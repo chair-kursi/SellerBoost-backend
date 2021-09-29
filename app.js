@@ -4,8 +4,37 @@ const cors = require("cors");
 require("dotenv/config");
 const app = express();
 const port = process.env.PORT || 3002;
+const os = require("os")
+const cluster = require("cluster")
 
 
+//CHECKING NUMBER OF CORES RUNNING
+const clusterWorkerSize = os.cpus().length
+if (clusterWorkerSize > 1) {
+  if (cluster.isMaster) {
+    for (let i=0; i < clusterWorkerSize; i++) {
+      cluster.fork()
+    }
+
+    cluster.on("exit", function(worker) {
+      console.log("Worker", worker.id, " has exitted.")
+    })
+  } else {
+    const app = express()
+
+    app.listen(port, function () {
+      console.log(`Express server listening on port ${port} and worker ${process.pid}`)
+    })
+  }
+}
+
+else {
+  const app = express()
+
+  app.listen(port, function () {
+    console.log(`Express server listening on port ${port} with the single worker ${process.pid}`)
+  })
+}
 
 //IMPORTING ROUTES
 const styleRouter = require("./routes/styles");
@@ -19,6 +48,8 @@ const inventoryRouter = require("./routes/inventory");
 const skuSalesRouter = require("./routes/skuSales");
 const skuTrafficRouter = require("./routes/skuTraffic");
 const serviceRouter = require("./routes/services");
+
+
 
 //MIDDLEWARES
 app.use(cors());
@@ -90,4 +121,4 @@ mongoose
   .then(() => console.log("Database connected!"))
   .catch((err) => console.log(err));
 
-app.listen(port);
+// app.listen(port);

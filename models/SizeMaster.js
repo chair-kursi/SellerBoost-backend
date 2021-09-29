@@ -12,7 +12,7 @@ const sizeMasterSchema = mongoose.Schema({
     },
     order:{
         type: String,
-        // required: true
+        required: true
     },
     created: {
         type: Date,

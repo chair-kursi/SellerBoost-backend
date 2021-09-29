@@ -7,20 +7,23 @@ const skuMasterSchema = mongoose.Schema({
     },
     skuCode: {
         type: String,
-        // required: true,
-        // unique: true
+        required: true,
+        unique: true
     },
     sizeCode: {
         type: String,
-        // unique: true
+        unique: true,
+        required: true,
     },
     barCode: {
         type: String,
-        // unique: true
+        required: true, 
+        unique: true
     },
     styleCode: {
         type: String,
-        // unique: true
+        required: true,
+        unique: true
     },
     created: {
         type: Date,

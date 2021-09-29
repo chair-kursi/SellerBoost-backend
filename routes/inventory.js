@@ -57,21 +57,8 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
             })
             .on("end", async () => {
               try {
-                // const result = await Inventory.insertMany(results);
-                var apiDataPull = Promise.resolve([
-                  {
-                    'day': '*date*',
-                    'revenue': '*revenue value*'
-                  }]).then(data => {
-                    return json2csv.parseAsync(data, { fields: ['day', 'revenue', 'totalImpressions', 'eCPM'] })
-                  }).then(csv => {
-                    fs.writeFile('pubmaticData.csv', csv, function (err) {
-                      if (err) throw err;
-                      console.log('File Saved!')
-                    });
-                  });
-                console.log(apiDataPull);
-                // res.json(result);
+                const result = await Inventory.insertMany(results); 
+                res.json(result);
               } catch (err) {
                 res.json({ message: err });
               }

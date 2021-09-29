@@ -7,26 +7,24 @@ const SkuSalesSchema = mongoose.Schema({
   },
   skuCode: {
     type: String,
-    // required: true,
-    // unique: true
+    required: true,
+    unique: true
   },
   name: {
     type: String,
-    // required: true,
-    // unique: true
+    required: true,
   },
   inventory: {
     type: Number,
-    // required: true,
-    // unique: true
+    required: true,
   },
   totalSales: {
     type: Number,
-    // required: true,
-    // unique: true
+    required: true,
   },
   dayOfInventory: {
     type: Number,
+    required: true,
   },
   created: {
     type: Date,

@@ -7,38 +7,32 @@ const ServiceSchema = mongoose.Schema({
     },
     styleCode: {
         type: String,
-        // required: true,
-        // unique: true
+        required: true,
+        unique: true
     },
     trafficActual: {
         type: String,
-        // required: true,
-        // unique: true
+        required: true,
     },
     trafficVirtual: {
         type: String,
-        // required: true,
-        // unique: true
+        required: true,
     },
     currentInv: {
         type: Number,
-        // required: true,
-        // unique: true
+        required: true,
     },
     salesNumber: {
         type: Number,
-        // required: true,
-        // unique: true
+        required: true,
     },
     salesRank: {
         type: Number,
-        // required: true,
-        // unique: true
+        required: true,
     },
     replenishmentRank: {
         type: Number,
-        // required: true,
-        // unique: true
+        required: true,
     },
     created: {
         type: Date,
@@ -50,4 +44,4 @@ const ServiceSchema = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("service", ServiceSchema);
+module.exports = mongoose.model("styleTraffic", ServiceSchema);
