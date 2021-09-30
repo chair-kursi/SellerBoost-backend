@@ -214,8 +214,8 @@ router.post("/styleTraffic", async (req, res) => {
         const totalInventoryOfStylecode = new Map();
         const totalSalesOfStylecode = new Map();
         for (let i = 0; i < allSkus.length; i++) {
-            const skuSalesData = await SkuSales.findOne({ clientId: clientId, SkuCode: allSkus[i].skuCode });
-            const skuInventoryData = await Inventory.findOne({ clientId: clientId, ItemSkuCode: allSkus[i].skuCode });
+            const skuSalesData = await SkuSales.findOne({ clientId: clientId, skuCode: allSkus[i].skuCode });
+            const skuInventoryData = await Inventory.findOne({ clientId: clientId, itemSkuCode: allSkus[i].skuCode });
 
 
             let TotalSales = 0, DayOfInventory = 0, inventory = 0, styleCode = allSkus[i].styleCode, skuCode = allSkus[i].skuCode, sizeCode = allSkus[i].sizeCode;
@@ -345,8 +345,12 @@ router.get("/exportCsv", async (req, res) => {
         fs.writeFile("csvFiles/csv.csv", csv, function (err) {
             if (err)
                 throw err;
-            // res.attachment("csvFiles/csv.csv")
-            res.send('<a href="/public/csv.csv" download="csv.csv" id="download-link"></a><script>document.getElementById("download-link").click();</script>');
+            
+            res.attachment("csvFiles/csv.csv");
+            // res.writeHead(200, {'Content-Type': 'application/csv'}); 
+            // res.setHeader("'Content-Type', 'application/csv'")
+            res.set('Content-Type', 'application/csv');
+            res.download("csvFiles/csv.csv");
             console.log("file Saved");
             // fs.unlink('csvFiles/EXPORT_CSV.csv', (err) => {
             //     if (err) throw err;

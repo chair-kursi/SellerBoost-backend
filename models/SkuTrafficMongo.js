@@ -13,12 +13,12 @@ const skuTrafficSchema = mongoose.Schema({
     styleCode: {
         type: String,
         required: true,
-        unique: true
+        // unique: true
     },
     sizeCode: {
         type: String,
         required: true,
-        unique: true
+        // unique: true
     },
     dayOfInventory: {
         type: Number,
@@ -68,18 +68,16 @@ const skuTrafficSchema = mongoose.Schema({
         type: Number,
         required: true
     }, 
-    Inventory: {
+    inventory: {
         type: Number,
         required: true
     },
     created: {
-        type: Date,
-        required: true,
+        type: Date, 
         default: Date.now()
     },
     updated: {
-        type: Date,
-        required: true,
+        type: Date, 
         default: Date.now()
     }
 })

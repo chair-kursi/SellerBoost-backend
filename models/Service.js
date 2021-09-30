@@ -12,27 +12,27 @@ const ServiceSchema = mongoose.Schema({
     },
     trafficActual: {
         type: String,
-        required: true,
+        // required: true,
     },
     trafficVirtual: {
         type: String,
-        required: true,
+        // required: true,
     },
     currentInv: {
         type: Number,
-        required: true,
+        // required: true,
     },
     salesNumber: {
         type: Number,
-        required: true,
+        // required: true,
     },
     salesRank: {
         type: Number,
-        required: true,
+        // required: true,
     },
     replenishmentRank: {
         type: Number,
-        required: true,
+        // required: true,
     },
     created: {
         type: Date,
@@ -45,3 +45,5 @@ const ServiceSchema = mongoose.Schema({
 });
 
 module.exports = mongoose.model("styleTraffic", ServiceSchema);
+
+

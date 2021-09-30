@@ -34,31 +34,31 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
                 facility: data["Facility"],
                 itemTypeName: data["Item Type Name"],
                 itemSkuCode: data["Item SkuCode"],
-                EAN: data["EAN"],
-                UPC: data["UPC"],
-                ISBN: data["ISBN"],
+                EAN: parseInt(data["EAN"]),
+                UPC: parseInt(data["UPC"]),
+                ISBN: parseInt(data["ISBN"]),
                 color: data["Color"],
                 size: data["Size"],
                 brand: data["Brand"],
                 categoryName: data["Category Name"],
-                MRP: data["MRP"],
-                openSale: data["Open Sale"],
-                inventory: data["Inventory"],
-                inventoryBlocked: data["Inventory Blocked"],
-                badInventory: data["Bad Inventory"],
-                putawayPending: data["Putaway Pending"],
-                pendingInventoryAssessment: data["Pending Inventory Assessment"],
-                stockInTransfer: data["Stock In Transfer"],
-                openPurchase: data["Open Purchase"],
+                MRP: parseFloat(data["MRP"]),
+                openSale: parseInt(data["Open Sale"]),
+                inventory: parseInt(data["Inventory"]),
+                inventoryBlocked: parseInt(data["Inventory Blocked"]),
+                badInventory: parseInt(data["Bad Inventory"]),
+                putawayPending: parseInt(data["Putaway Pending"]),
+                pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
+                stockInTransfer: parseInt(data["Stock In Transfer"]),
+                openPurchase: parseInt(data["Open Purchase"]),
                 enabled: data["Enabled"],
-                costPrice: data["Cost Price"],
+                costPrice: parseInt(data["Cost Price"]),
               }
               results.push(obj);
             })
             .on("end", async () => {
               try {
                 const result = await Inventory.insertMany(results); 
-                res.json(result);
+                res.json(result); 
               } catch (err) {
                 res.json({ message: err });
               }

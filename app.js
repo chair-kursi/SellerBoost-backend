@@ -11,8 +11,8 @@ const cluster = require("cluster")
 //CHECKING NUMBER OF CORES RUNNING
 const clusterWorkerSize = os.cpus().length
 if (clusterWorkerSize > 1) {
-  if (cluster.isMaster) {
-    for (let i=0; i < clusterWorkerSize; i++) {
+  if (cluster.isMaster) { 
+    for (let i=0; i < Math.min(clusterWorkerSize, 3); i++) {
       cluster.fork()
     }
 

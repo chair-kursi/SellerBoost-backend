@@ -7,12 +7,11 @@ const inventorySchema = mongoose.Schema({
   },
   facility: {
     type: String,
-    required: true 
-    // unique: true
+    // required: true  
   },
   itemTypeName: {
     type: String,
-    required: true 
+    // required: true 
   },
   itemSkuCode: {
     type: String,
@@ -20,40 +19,40 @@ const inventorySchema = mongoose.Schema({
     unique: true
   },
   EAN: {
-    type: Number,
-    required: true
+    type: String,
+    // required: true
   },
   UPC: {
-    type: Number,
-    required: true
+    type: String,
+    // required: true
   },
   ISBN: {
-    type: Number,
-    required: true
+    type: String,
+    // required: true
   },
   color: {
     type: String,
-    required: true
+    // required: true
   },
   size: {
     type: String,
-    required: true
+    // required: true
   },
   brand: {
     type: String,
-    required: true
+    // required: true
   },
   categoryName: {
     type: String,
-    required: true
+    // required: true
   },
   MRP: {
-    type: Number,
-    required: true
+    type: String,
+    // required: true
   },
   openSale: {
     type: Number,
-    required: true
+    // required: true
   },
   inventory: {
     type: Number,
@@ -61,35 +60,35 @@ const inventorySchema = mongoose.Schema({
   },
   inventoryBlocked: {
     type: Number,
-    required: true
+    // required: true
   },
   badInventory: {
     type: Number,
-    required: true
+    // required: true
   },
   putawayPending: {
     type: Number,
-    required: true
+    // required: true
   },
   pendingInventoryAssessment: {
     type: Number,
-    required: true
+    // required: true
   },
   stockInTransfer: {
     type: Number,
-    required: true
+    // required: true
   },
   openPurchase: {
     type: Number,
-    required: true
+    // required: true
   },
   enabled: {
     type: String,
-    required: true
+    // required: true
   },
   costPrice: {
-    type: Number,
-    required: true
+    type: String,
+    // required: true
   },
   created: {
     type: Date,
