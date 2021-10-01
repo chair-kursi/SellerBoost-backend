@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Service = require("../models/Service");
+const Service = require("../models/StyleTraffic");
 const SkuSales = require("../models/SkuSales");
 const SkuMaster = require('../models/SkuMaster');
 const Inventory = require("../models/Inventory");
@@ -208,6 +208,9 @@ const setTrafficColor = (colorCount) => {
 router.post("/styleTraffic", async (req, res) => {
 
     try {
+        await SkuTrafficMongo.deleteMany({});
+        await Service.deleteMany({});
+        
         const allSkus = await SkuMaster.find({ clientId: clientId });
         var itemMaster = [];
 
@@ -345,7 +348,7 @@ router.get("/exportCsv", async (req, res) => {
         fs.writeFile("csvFiles/csv.csv", csv, function (err) {
             if (err)
                 throw err;
-            
+
             res.attachment("csvFiles/csv.csv");
             // res.writeHead(200, {'Content-Type': 'application/csv'}); 
             // res.setHeader("'Content-Type', 'application/csv'")
