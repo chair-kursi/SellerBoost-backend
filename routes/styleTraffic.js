@@ -210,15 +210,28 @@ router.post("/styleTraffic", async (req, res) => {
     try {
         await SkuTrafficMongo.deleteMany({});
         await Service.deleteMany({});
-        
-        const allSkus = await SkuMaster.find({ clientId: clientId });
-        var itemMaster = [];
 
+        const allSkus = await SkuMaster.find({ clientId: clientId });
+        const allSkuSales = await SkuSales.find({ clientId: clientId });
+        const allSkuInventory = await Inventory.find({ clientId: clientId });
+
+        const skuSalesMap = new Map();
+        const skuInvMap = new Map();
+
+        for (var i = 0; i < allSkus.length; i++) {
+            const skuSalesData = allSkuSales.find(ele=>ele.skuCode === allSkus[i].skuCode);
+            const skuInventoryData = allSkuInventory.find(ele=>ele.itemSkuCode === allSkus[i].skuCode);
+            skuSalesMap.set(allSkus[i].skuCode, skuSalesData);
+            skuInvMap.set(allSkus[i].skuCode, skuInventoryData); 
+        }
+
+
+        var itemMaster = [];
         const totalInventoryOfStylecode = new Map();
         const totalSalesOfStylecode = new Map();
         for (let i = 0; i < allSkus.length; i++) {
-            const skuSalesData = await SkuSales.findOne({ clientId: clientId, skuCode: allSkus[i].skuCode });
-            const skuInventoryData = await Inventory.findOne({ clientId: clientId, itemSkuCode: allSkus[i].skuCode });
+            const skuSalesData = skuSalesMap.get(allSkus[i].skuCode);
+            const skuInventoryData = skuInvMap.get(allSkus[i].skuCode);
 
 
             let TotalSales = 0, DayOfInventory = 0, inventory = 0, styleCode = allSkus[i].styleCode, skuCode = allSkus[i].skuCode, sizeCode = allSkus[i].sizeCode;
@@ -287,11 +300,10 @@ router.post("/styleTraffic", async (req, res) => {
                 suggestedInventory2: suggestedInventory2,
                 suggestedInventory3: suggestedInventory3,
             };
-            const item = new SkuTrafficMongo(skuData);
-            const savedItem = await item.save();
-
-            itemMaster.push(savedItem);
+            
+            itemMaster.push(skuData);
         }
+        await SkuTrafficMongo.insertMany(itemMaster);
 
         //SETTING TRAFFIC COLORS COUNT 
         const colorCount = setColorCount();
