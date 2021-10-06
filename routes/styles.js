@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Style = require('../models/Style');
 const { successStyleResponse, errorStyleResponse, validateStyle } = require('../validators/stylesValidator');
-const { getClientId } = require('../services/getClientId')
+const { getClientId } = require('../services/getClientId');
+const fs = require("fs");
+const csvParser = require("csv-parser");
+var https = require('https');
+const multer = require("multer");
 
 
 const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
@@ -23,7 +27,7 @@ const notClientIdAndStyleCode = (styleCode, clientId) => {
 
 //GETTING ALL STYLES
 router.get('/', async (req, res) => {
-    try {  
+    try {
         const style = await Style.find({ clientId: clientId });
         res.json(style);
 
@@ -43,29 +47,60 @@ router.get('/:styleCode', async (req, res) => {
 })
 
 
-//ADDING A NEW STYLE
-router.post('/add', async (req, res) => {
+const fileStorageEngine = multer.diskStorage({
+    destination: (res, file, cb) => {
+        cb(null, "./csvFiles");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "__" + file.originalname);
+    },
+});
 
-    if (req.body.styleCode === "SB-11")
-        return successStyleResponse(res);
-    else if (req.body.styleCode === "SB-00")
-        return errorStyleResponse(res);
+//ADDING A NEW STYLE
+const upload = multer({ storage: fileStorageEngine });
+router.post('/add', upload.single("csvFile"), async (req, res) => {
+
+    // if (req.body.styleCode === "SB-11")
+    //     return successStyleResponse(res);
+    // else if (req.body.styleCode === "SB-00")
+    //     return errorStyleResponse(res);
 
     //VALIDATING REQUEST
-    const style = new Style(req.body);
+    // const style = new Style(req.body);
 
-    if (Object.keys(validateStyle(req)).length) {
-        return res.status(400).json(validateStyle(req));
-    }
+    // if (Object.keys(validateStyle(req)).length) {
+    //     return res.status(400).json(validateStyle(req));
+    // }
 
     try {
-        const savedStyle = await style.save();
-
-        res.status(200).json({ data: savedStyle, error: {} });
-
+        var results = [];
+        fs.createReadStream(req.file.path)
+            .pipe(csvParser({}))
+            .on("data", (data) => {
+                results.push({ ...data, name: "style_" + data.styleCode, status: null })
+            })
+            .on("end", async () => {
+                try {
+                    const result = await Style.insertMany(results);
+                    res.json(result);
+                    // res.json(results); 
+                } catch (err) {
+                    res.json({ message: err });
+                }
+            });
     } catch (err) {
         res.json({ message: err });
     }
+
+
+    // try {
+    //     const savedStyle = await style.save();
+
+    //     res.status(200).json({ data: savedStyle, error: {} });
+
+    // } catch (err) {
+    //     res.json({ message: err });
+    // }
 })
 
 

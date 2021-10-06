@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Service = require("../models/StyleTraffic");
+const StyleTraffic = require("../models/StyleTraffic");
 const SkuSales = require("../models/SkuSales");
 const SkuMaster = require('../models/SkuMaster');
 const Inventory = require("../models/Inventory");
@@ -8,6 +8,7 @@ const { getClientId } = require("../services/getClientId");
 const SkuTrafficMongo = require("../models/SkuTrafficMongo");
 const { Parser } = require("json2csv");
 const fs = require("fs");
+const Style = require("../models/Style");
 const clientId = getClientId();
 
 //DEFINING CONSTATNTS
@@ -209,20 +210,21 @@ router.post("/styleTraffic", async (req, res) => {
 
     try {
         await SkuTrafficMongo.deleteMany({});
-        await Service.deleteMany({});
+        await StyleTraffic.deleteMany({});
 
         const allSkus = await SkuMaster.find({ clientId: clientId });
         const allSkuSales = await SkuSales.find({ clientId: clientId });
         const allSkuInventory = await Inventory.find({ clientId: clientId });
+        const styleMaster = await Style.find({ clientId: clientId });
 
         const skuSalesMap = new Map();
         const skuInvMap = new Map();
 
         for (var i = 0; i < allSkus.length; i++) {
-            const skuSalesData = allSkuSales.find(ele=>ele.skuCode === allSkus[i].skuCode);
-            const skuInventoryData = allSkuInventory.find(ele=>ele.itemSkuCode === allSkus[i].skuCode);
+            const skuSalesData = allSkuSales.find(ele => ele.skuCode === allSkus[i].skuCode);
+            const skuInventoryData = allSkuInventory.find(ele => ele.itemSkuCode === allSkus[i].skuCode);
             skuSalesMap.set(allSkus[i].skuCode, skuSalesData);
-            skuInvMap.set(allSkus[i].skuCode, skuInventoryData); 
+            skuInvMap.set(allSkus[i].skuCode, skuInventoryData);
         }
 
 
@@ -300,7 +302,7 @@ router.post("/styleTraffic", async (req, res) => {
                 suggestedInventory2: suggestedInventory2,
                 suggestedInventory3: suggestedInventory3,
             };
-            
+
             itemMaster.push(skuData);
         }
         await SkuTrafficMongo.insertMany(itemMaster);
@@ -313,26 +315,32 @@ router.post("/styleTraffic", async (req, res) => {
         const salesRank = setSalesRank(totalSalesOfStylecode)
         const trafficColor = setTrafficColor(colorCount);
         const finalArray = [];
+        const statusArr = ["Launching", "Live", "Disabled"];
         for (let i = 0; i < styleCodeArr.length; i++) {
             let styleCode = styleCodeArr[i],
                 currentInv = totalInventoryOfStylecode.get(styleCode),
-                salesNumber = totalSalesOfStylecode.get(styleCode);
+                salesNumber = totalSalesOfStylecode.get(styleCode),
+                status = styleMaster.find(ele => ele.styleCode === styleCode).status;
 
-
+            if (status === null) {
+                status = statusArr[Math.floor(Math.random() * 3)];
+            }
             let obj = {
                 clientId: clientId,
                 styleCode: styleCode,
                 trafficActual: trafficColor.get(styleCode),
                 trafficVirtual: trafficColor.get(styleCode),
+                status: status,
                 currentInv: currentInv,
                 salesNumber: salesNumber,
                 salesRank: salesRank.get(styleCode),
                 replenishmentRank: replenishmentRank.get(styleCode)
             }
+            // console.log(obj);
             finalArray.push(obj);
         }
         finalArray.sort((a, b) => { return a.salesRank - b.salesRank })
-        const dashboard = await Service.insertMany(finalArray);
+        const dashboard = await StyleTraffic.insertMany(finalArray);
         res.json(dashboard);
     }
     catch (err) {
@@ -342,7 +350,7 @@ router.post("/styleTraffic", async (req, res) => {
 
 router.get("/styleTraffic", async (req, res) => {
     try {
-        const dashBoard = await Service.find({ clientId: clientId })
+        const dashBoard = await StyleTraffic.find({ clientId: clientId });
         res.json({ data: dashBoard, error: null });
     }
     catch (err) {
@@ -351,7 +359,7 @@ router.get("/styleTraffic", async (req, res) => {
 })
 
 router.get("/exportCsv", async (req, res) => {
-    const dashboard = await Service.find({ clientId: clientId });
+    const dashboard = await StyleTraffic.find({ clientId: clientId });
     const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
     const opts = { fields };
     try {

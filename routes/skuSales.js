@@ -77,7 +77,7 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
 });
 
 
-//DON'T REMOVE THIS AS THEY MAY BE USED IN FUTURE TO INSERT MarketplaceHealth DATA !!..
+//DON'T REMOVE THIS AS THIS MAY BE USED IN FUTURE TO INSERT MarketplaceHealth DATA !!..
 // router.post("/marketplaceHealth", async(req, res)=>{
 //   try{
 //     var results = [];
