@@ -6,7 +6,7 @@ dotenv.config({path:__dirname+'/.env'});
 
 // require("dotenv/config");
 const app = express();
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3002;
 const os = require("os")
 const cluster = require("cluster")
 
