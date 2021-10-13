@@ -274,10 +274,24 @@ router.post("/styleTraffic", async (req, res) => {
             const trafficShortCode = getTrafficShortCode(trafficColor);
             const skuTrafficCode = trafficShortCode + "_" + dayInventory + "D_" + inventory + "C_" + TotalSales + "S#";
             const planDay1 = 30, planDay2 = 60, planDay3 = 90;
-            const suggestedInventory1 = (((planDay1 / 30) * TotalSales - inventory) > 0 ? ((planDay1 / 30) * TotalSales - inventory) : 0);//suggestedInventory1 = (planDay1 / 30) * TotalSales - inventory
-            const suggestedInventory2 = (((planDay2 / 30) * TotalSales - inventory) > 0 ? ((planDay2 / 30) * TotalSales - inventory) : 0);//suggestedInventory2 = (planDay2 / 30) * TotalSales - inventory
-            const suggestedInventory3 = (((planDay3 / 30) * TotalSales - inventory) > 0 ? ((planDay3 / 30) * TotalSales - inventory) : 0);//suggestedInventory3 = (planDay3 / 30) * TotalSales - inventory
+            let suggestedInventory1 = (((planDay1 / 30) * TotalSales - inventory) > 0 ? ((planDay1 / 30) * TotalSales - inventory) : 0);//suggestedInventory1 = (planDay1 / 30) * TotalSales - inventory
+            let suggestedInventory2 = (((planDay2 / 30) * TotalSales - inventory) > 0 ? ((planDay2 / 30) * TotalSales - inventory) : 0);//suggestedInventory2 = (planDay2 / 30) * TotalSales - inventory
+            let suggestedInventory3 = (((planDay3 / 30) * TotalSales - inventory) > 0 ? ((planDay3 / 30) * TotalSales - inventory) : 0);//suggestedInventory3 = (planDay3 / 30) * TotalSales - inventory
+            let suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3;
+            if (suggestedInventory1 < 100)
+                suggestedSmoothInventory1 = (Math.round(suggestedInventory1 / 10)) * 10;
+            else
+                suggestedSmoothInventory1 = (Math.round(suggestedInventory1 / 100)) * 100;
 
+            if (suggestedInventory2 < 100)
+                suggestedSmoothInventory2 = (Math.round(suggestedInventory2 / 10)) * 10;
+            else
+                suggestedSmoothInventory2 = (Math.round(suggestedInventory2 / 100)) * 100;
+
+            if (suggestedInventory3 < 100)
+                suggestedSmoothInventory3 = (Math.round(suggestedInventory3 / 10)) * 10;
+            else
+                suggestedSmoothInventory3 = (Math.round(suggestedInventory3 / 100)) * 100;
 
             //MAPPING STYLECODES WITH TRAFFIC COLOR ----START
             trafficColorCountUsingStyleCode(styleCode, trafficColor);
@@ -299,8 +313,11 @@ router.post("/styleTraffic", async (req, res) => {
                 skuTrafficCode: skuTrafficCode,
                 skuTrafficCodeVirtual: skuTrafficCode,
                 suggestedInventory1: suggestedInventory1,
+                suggestedSmoothInventory1: suggestedSmoothInventory1,
                 suggestedInventory2: suggestedInventory2,
+                suggestedSmoothInventory2: suggestedSmoothInventory2,
                 suggestedInventory3: suggestedInventory3,
+                suggestedSmoothInventory3: suggestedSmoothInventory3
             };
 
             itemMaster.push(skuData);

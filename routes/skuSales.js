@@ -77,47 +77,7 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
 });
 
 
-//DON'T REMOVE THIS AS THIS MAY BE USED IN FUTURE TO INSERT MarketplaceHealth DATA !!..
-// router.post("/marketplaceHealth", async(req, res)=>{
-//   try{
-//     var results = [];
-//     var download = function (url, dest) {
-//       var file = fs.createWriteStream(dest);
-//       https.get(url, function (response) {
-//         response.pipe(file);
-//         file.on('finish', function () {
-//           fs.createReadStream(dest)
-//             .pipe(csvParser({}))
-//             .on("data", (data) => results.push(data))
-//             .on("end", async () => {
-//               try {
-//                 const result = await MarketplaceHealth.insertMany(results);
-//                 res.json(result);
-//                 fs.unlink(dest, (err) => {//deleting created file
-//                   if (err) throw err;
-//                   console.log("deleted");
-//                 });
-//               } catch (err) {
-//                 res.json({ message: err });
-//               }
-//             });
-//         });
-//       });
-//     }
-//     download(req.body.fileUrl, "csvFiles/MarketplaceHealth.csv");
-//   }catch(err){
 
-//   }
-// })
-
-router.get("/marketplaceHealth", async (req, res) => {
-  try {
-    const marketplaceHealth = await MarketplaceHealth.find({});
-    res.json(marketplaceHealth);
-  } catch (err) {
-    res.json({ message: err })
-  }
-})
 
 
 module.exports = router;

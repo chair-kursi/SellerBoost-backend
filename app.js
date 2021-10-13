@@ -7,8 +7,8 @@ dotenv.config({path:__dirname+'/.env'});
 // require("dotenv/config");
 const app = express();
 const port = process.env.PORT || 3002;
-const os = require("os")
-const cluster = require("cluster")
+const os = require("os");
+const cluster = require("cluster");
 
 
 //CHECKING NUMBER OF CORES RUNNING
@@ -51,6 +51,7 @@ const inventoryRouter = require("./routes/inventory");
 const skuSalesRouter = require("./routes/skuSales");
 const skuTrafficRouter = require("./routes/skuTraffic");
 const serviceRouter = require("./routes/styleTraffic");
+const marketplaceHealthRouter = require("./routes/marketplaceHealth");
 
 
 
@@ -71,6 +72,7 @@ app.use("/api", inventoryRouter);
 app.use("/api", skuSalesRouter);
 app.use("/", skuTrafficRouter);
 app.use("/", serviceRouter);
+app.use("/api", marketplaceHealthRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));

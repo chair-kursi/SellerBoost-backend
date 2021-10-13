@@ -60,7 +60,15 @@ const skuTrafficSchema = mongoose.Schema({
         type: Number,
         required: true
     },
+    suggestedSmoothInventory1:{
+        type: Number,
+        required: true
+    },
     suggestedInventory2: {
+        type: Number,
+        required: true
+    },
+    suggestedSmoothInventory2:{
         type: Number,
         required: true
     },
@@ -68,6 +76,10 @@ const skuTrafficSchema = mongoose.Schema({
         type: Number,
         required: true
     }, 
+    suggestedSmoothInventory3:{
+        type: Number,
+        required: true
+    },
     inventory: {
         type: Number,
         required: true
