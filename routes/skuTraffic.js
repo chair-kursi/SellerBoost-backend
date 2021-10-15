@@ -9,7 +9,7 @@ const clientId = getClientId(); //sir as we are getting clientId from a func, is
 
 router.get("/skuTraffic", async(req, res)=>{
     try{
-        const skuTraffic = await SkuTraffic.find({clientId: clientId})
+        const skuTraffic = await SkuTraffic.find({clientID: clientId});
         res.json({data: skuTraffic, error: null});
     }
     catch(err){

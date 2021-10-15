@@ -74,7 +74,7 @@ router.post("/marketplaceHealth", async (req, res) => {
                   channelCodeArr.push(obj.channelCode);
               }
 
-              const data = {}, data2 = {};
+              const data = {}, data2 = [];
               for (var i = 0; i < channelCodeArr.length; i++) {
                 const finalArr = [], tempArr = [];
                 for (var j = 0; j < styleCodeArr.length; j++) {
@@ -114,7 +114,7 @@ router.post("/marketplaceHealth", async (req, res) => {
                   }
                   finalArr.push(obj);
                 } 
-                finalArr.sort((a, b) => { a.rank - b.rank });
+                finalArr.sort((a, b) => {return a.rank - b.rank }); 
                 data[channelCodeArr[i]] = finalArr;
               }
 
