@@ -91,11 +91,10 @@ router.post("/marketplaceHealth", async (req, res) => {
                     if (!totalSkus.find((ele) => { return ele === newArr[k].skuCode }))
                       missingArr.push(newArr[k].sizeCode);
                   }
-                  if (styleCodeArr[j] === "SB-0000073")
-                    tempArr.push({ "totalSkus": totalSkus, "missingArr": missingArr, "newArr": newArr });
+
                   const disabledArr = newArr.filter((ele) => { return (ele.disabledManually || ele.disabledDueToErrors) }).map((ele) => { return ele.sizeCode });
                   const currentStyle = styleTraffic.filter((ele) => { return (ele.styleCode === styleCodeArr[j]); }).map((ele) => { return ele; });
-                  const marketplaceCount = (totalSkus.length ? totalSkus.length : 0) - disabledArr.length - missingArr.length;
+                  const marketplaceCount = (totalSkus.length || 0) - (newArr.length - disabledArr.length) ;
                   // if(disabledArr.length)
                   // {
                   //   console.log("Disabled", styleCodeArr[j]);
@@ -118,6 +117,8 @@ router.post("/marketplaceHealth", async (req, res) => {
                   }
                   if (obj.baseCount !== obj.marketplaceCount)
                     finalArr.push(obj);
+                  // if (styleCodeArr[j] === "SB-000119")
+                  //   console.log(channelCodeArr[i], styleCodeMap.get("SB-000119").length, missingArr, disabledArr.length, obj.marketplaceCount);
 
                 }
                 finalArr.sort((a, b) => { return a.rank - b.rank });
@@ -127,7 +128,7 @@ router.post("/marketplaceHealth", async (req, res) => {
                   mismatch: finalArr.length
                 });
               }
-
+              // SB-000119
               try {
                 const result1 = new MarketplaceHealth(data);
                 const result = await result1.save();
