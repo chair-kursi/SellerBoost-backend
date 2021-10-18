@@ -170,7 +170,8 @@ router.post("/marketplaceHealth", async (req, res) => {
 router.get("/marketplaceHealth", async (req, res) => {
   try {
     const marketplaceHealth = await MarketplaceHealth.find({});
-    res.json({ data: marketplaceHealth[0], error: null });
+    const summary = await Summary.findOne({ clientId: clientId });
+    res.json({ data: marketplaceHealth[0], summary: summary, error: null });
   } catch (err) {
     res.json({ message: err })
   }
