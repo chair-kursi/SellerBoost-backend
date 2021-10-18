@@ -94,7 +94,7 @@ router.post("/marketplaceHealth", async (req, res) => {
 
                   const disabledArr = newArr.filter((ele) => { return (ele.disabledManually || ele.disabledDueToErrors) }).map((ele) => { return ele.sizeCode });
                   const currentStyle = styleTraffic.filter((ele) => { return (ele.styleCode === styleCodeArr[j]); }).map((ele) => { return ele; });
-                  const marketplaceCount = (totalSkus.length || 0) - (newArr.length - disabledArr.length) ;
+                  const marketplaceCount = missingArr.length + (newArr.length - disabledArr.length) ;
                   // if(disabledArr.length)
                   // {
                   //   console.log("Disabled", styleCodeArr[j]);
