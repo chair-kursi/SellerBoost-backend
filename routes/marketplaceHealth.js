@@ -115,7 +115,7 @@ router.post("/marketplaceHealth", async (req, res) => {
                       missing: missingArr
                     }
                   }
-                  if (obj.baseCount !== obj.marketplaceCount)
+                  if (obj.baseCount > obj.marketplaceCount)
                     finalArr.push(obj);
                   // if (styleCodeArr[j] === "SB-000119")
                   //   console.log(channelCodeArr[i], styleCodeMap.get("SB-000119").length, missingArr, disabledArr.length, obj.marketplaceCount);
