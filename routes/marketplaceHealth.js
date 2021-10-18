@@ -7,7 +7,11 @@ var https = require('https');
 const SkuMaster = require('../models/SkuMaster');
 const StyleTraffic = require('../models/StyleTraffic');
 const SkuError = require("../models/SkuError");
+const Summary = require('../models/Summary');
+const { getClientId } = require('../services/getClientId');
 
+
+const clientId = getClientId();
 
 router.post("/marketplaceHealth", async (req, res) => {
   try {
@@ -74,9 +78,9 @@ router.post("/marketplaceHealth", async (req, res) => {
                   channelCodeArr.push(obj.channelCode);
               }
 
-              const data = {}, data2 = [];
+              const data = {}, summary = [];
               for (var i = 0; i < channelCodeArr.length; i++) {
-                const finalArr = [], tempArr = [];
+                const finalArr = [], tempArr = []; let cnt = 0;
                 for (var j = 0; j < styleCodeArr.length; j++) {
                   const arr = reasonArrMap.get(styleCodeArr[j]);
                   const newArr = arr.filter((ele) => { return ele.channelCode === channelCodeArr[i] });
@@ -112,10 +116,16 @@ router.post("/marketplaceHealth", async (req, res) => {
                       missing: missingArr
                     }
                   }
-                  finalArr.push(obj);
-                } 
-                finalArr.sort((a, b) => {return a.rank - b.rank }); 
+                  if (obj.baseCount !== obj.marketplaceCount)
+                    finalArr.push(obj);
+
+                }
+                finalArr.sort((a, b) => { return a.rank - b.rank });
                 data[channelCodeArr[i]] = finalArr;
+                summary.push({
+                  channelCode: channelCodeArr[i],
+                  mismatch: finalArr.length
+                });
               }
 
               try {
@@ -123,7 +133,22 @@ router.post("/marketplaceHealth", async (req, res) => {
                 const result = await result1.save();
                 skuError.sort((a, b) => { return a[1] - b[1] });
                 await SkuError.insertMany(skuError);
-                res.json({ data: result, error: null });
+                await Summary.updateMany(
+                  { clientId: clientId },
+                  {
+                    marketplaceHealth: {
+                      channels: summary,
+                      updated: Date.now()
+                    },
+                    skuError: {
+                      errorCount: skuError.length,
+                      updated: Date.now()
+                    },
+                    updated: Date.now()
+                  },
+                  { new: true }
+                );
+                res.json({ data: result, channels: summary, skuError: skuError.length, error: null });
                 fs.unlink(dest, (err) => {//deleting created file
                   if (err) throw err;
                   console.log("deleted");

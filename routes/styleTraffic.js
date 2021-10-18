@@ -9,6 +9,7 @@ const SkuTrafficMongo = require("../models/SkuTrafficMongo");
 const { Parser } = require("json2csv");
 const fs = require("fs");
 const Style = require("../models/Style");
+const Summary = require("../models/Summary");
 const clientId = getClientId();
 
 //DEFINING CONSTATNTS
@@ -333,6 +334,7 @@ router.post("/styleTraffic", async (req, res) => {
         const trafficColor = setTrafficColor(colorCount);
         const finalArray = [];
         const statusArr = ["Launching", "Live", "Disabled"];
+        let summaryObj = {};
         for (let i = 0; i < styleCodeArr.length; i++) {
             let styleCode = styleCodeArr[i],
                 currentInv = totalInventoryOfStylecode.get(styleCode),
@@ -353,15 +355,28 @@ router.post("/styleTraffic", async (req, res) => {
                 salesRank: salesRank.get(styleCode),
                 replenishmentRank: replenishmentRank.get(styleCode)
             }
+            if(!summaryObj[obj.trafficActual])
+            summaryObj[obj.trafficActual] = 0;
+            summaryObj[obj.trafficActual] += 1;//CHECK WHY IT'S NOT WORKING
             // console.log(obj);
             finalArray.push(obj);
         }
-        finalArray.sort((a, b) => { return a.salesRank - b.salesRank })
+        finalArray.sort((a, b) => { return a.salesRank - b.salesRank }); 
+        let summary = {
+            soldout: summaryObj["SOLDOUT"],
+            red: summaryObj["RED"],
+            orange: summaryObj["ORANGE"],
+            green: summaryObj["GREEN"],
+            overgreen: summaryObj["OVERGREEN"],
+            updated: Date.now()
+        }
         const dashboard = await StyleTraffic.insertMany(finalArray);
-        res.json(dashboard);
+ 
+        await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
+        res.json({ data: dashboard, summary: summary , error: null });
     }
     catch (err) {
-        res.json({ message: err });
+        res.status(400).json({ message: err });
     }
 })
 

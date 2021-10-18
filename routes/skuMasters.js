@@ -111,7 +111,7 @@ router.patch('/update/:skuCode', async (req, res) => {
     if (!sku)
         return res.status(400).json({
             data: null,
-            error: notClientIdAndSkuCode(req.params.SkuMaster, clientId)
+            error: notClientIdAndSkuCode(req.params.skuCode, clientId)
         }); 
 
     try {

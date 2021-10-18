@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 const skuTrafficSchema = mongoose.Schema({
     clientID: {
         type: String,
-        default: "StyloBug"
+        // default: "StyloBug"
     },
     skuCode: {
         type: String,
