@@ -355,13 +355,13 @@ router.post("/styleTraffic", async (req, res) => {
                 salesRank: salesRank.get(styleCode),
                 replenishmentRank: replenishmentRank.get(styleCode)
             }
-            if(!summaryObj[obj.trafficActual])
-            summaryObj[obj.trafficActual] = 0;
+            if (!summaryObj[obj.trafficActual])
+                summaryObj[obj.trafficActual] = 0;
             summaryObj[obj.trafficActual] += 1;//CHECK WHY IT'S NOT WORKING
             // console.log(obj);
             finalArray.push(obj);
         }
-        finalArray.sort((a, b) => { return a.salesRank - b.salesRank }); 
+        finalArray.sort((a, b) => { return a.salesRank - b.salesRank });
         let summary = {
             soldout: summaryObj["SOLDOUT"],
             red: summaryObj["RED"],
@@ -371,9 +371,9 @@ router.post("/styleTraffic", async (req, res) => {
             updated: Date.now()
         }
         const dashboard = await StyleTraffic.insertMany(finalArray);
- 
+
         await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
-        res.json({ data: dashboard, summary: summary , error: null });
+        res.json({ data: dashboard, summary: summary, error: null });
     }
     catch (err) {
         res.status(400).json({ message: err });
@@ -383,7 +383,8 @@ router.post("/styleTraffic", async (req, res) => {
 router.get("/styleTraffic", async (req, res) => {
     try {
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
-        res.json({ data: dashBoard, error: null });
+        const summary = await Summary.findOne({ clientId: clientId });
+        res.json({ data: dashBoard, summary: summary, error: null });
     }
     catch (err) {
         res.json({ data: null, error: err })
