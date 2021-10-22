@@ -57,8 +57,8 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
             })
             .on("end", async () => {
               try {
-                const result = await Inventory.insertMany(results); 
-                res.json(result); 
+                const result = await Inventory.insertMany(results);
+                res.json(result);
               } catch (err) {
                 res.json({ message: err });
               }
@@ -108,5 +108,15 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
       });
   }
 });
+
+
+router.post("/skuInventory", async (req, res) => {
+  try {
+    const inventory = await Inventory.find({});
+    res.json({ data: inventory, error: null });
+  } catch (err) {
+    res.status(400).json({ message: err });
+  }
+})
 
 module.exports = router;

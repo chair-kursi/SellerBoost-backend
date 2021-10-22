@@ -94,7 +94,7 @@ router.post("/marketplaceHealth", async (req, res) => {
 
                   const disabledArr = newArr.filter((ele) => { return (ele.disabledManually || ele.disabledDueToErrors) }).map((ele) => { return ele.sizeCode });
                   const currentStyle = styleTraffic.filter((ele) => { return (ele.styleCode === styleCodeArr[j]); }).map((ele) => { return ele; });
-                  const marketplaceCount = missingArr.length + (newArr.length - disabledArr.length) ;
+                  const marketplaceCount = missingArr.length + (newArr.length - disabledArr.length);
                   // if(disabledArr.length)
                   // {
                   //   console.log("Disabled", styleCodeArr[j]);
@@ -115,7 +115,7 @@ router.post("/marketplaceHealth", async (req, res) => {
                       missing: missingArr
                     }
                   }
-                  if (obj.baseCount > obj.marketplaceCount)
+                  if (obj.baseCount > obj.marketplaceCount && (disabledArr.length || missingArr.length))
                     finalArr.push(obj);
                   // if (styleCodeArr[j] === "SB-000119")
                   //   console.log(channelCodeArr[i], styleCodeMap.get("SB-000119").length, missingArr, disabledArr.length, obj.marketplaceCount);

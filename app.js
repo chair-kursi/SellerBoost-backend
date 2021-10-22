@@ -2,7 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require('dotenv')
-dotenv.config({path:__dirname+'/.env'});
+dotenv.config({ path: __dirname + '/.env' });
+
+const cookiesParser = require('cookie-parser');
 
 // require("dotenv/config");
 const app = express();
@@ -52,13 +54,14 @@ const skuSalesRouter = require("./routes/skuSales");
 const skuTrafficRouter = require("./routes/skuTraffic");
 const serviceRouter = require("./routes/styleTraffic");
 const marketplaceHealthRouter = require("./routes/marketplaceHealth");
+const clientRouter = require("./routes/clients");
 
 
 
 //MIDDLEWARES
 app.use(cors());
 app.use(express.json());
-
+app.use(cookiesParser);
 
 //USING ROUTES AS A MIDDLEWARE
 app.use("/style", styleRouter);
@@ -73,6 +76,7 @@ app.use("/api", skuSalesRouter);
 app.use("/", skuTrafficRouter);
 app.use("/", serviceRouter);
 app.use("/api", marketplaceHealthRouter);
+app.use("/", clientRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
@@ -80,7 +84,7 @@ if (process.env.NODE_ENV === "production") {
 
 //CONNECT TO DB
 mongoose
-  .connect(process.env.DB_CONNECTION, 
+  .connect(process.env.DB_CONNECTION,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,

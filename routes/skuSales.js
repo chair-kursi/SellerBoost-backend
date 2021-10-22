@@ -76,8 +76,13 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
   else res.send("Nothing")
 });
 
-
-
-
+router.post("/skuSales", async (req, res) => {
+  try {
+    const skuSales = await SkuSales.find({});
+    res.json({ data: skuSales, error: null });
+  } catch (err) {
+    res.status(400).json({ message: err });
+  }
+})  
 
 module.exports = router;
