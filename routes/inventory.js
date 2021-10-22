@@ -21,6 +21,7 @@ const upload = multer({ storage: fileStorageEngine });
 
 router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
   const results = [];
+  const clientId = getClientId();
   if (req.body.fileUrl) {
     var download = function (url, dest) {
       var file = fs.createWriteStream(dest);
@@ -110,8 +111,9 @@ router.post("/skuInventory", upload.single("csvFile"), (req, res) => {
 });
 
 
-router.post("/skuInventory", async (req, res) => {
+router.get("/skuInventory", async (req, res) => {
   try {
+    const clientId = getClientId();
     const inventory = await Inventory.find({});
     res.json({ data: inventory, error: null });
   } catch (err) {

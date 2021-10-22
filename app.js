@@ -52,7 +52,7 @@ const stylePlanRouter = require("./routes/stylePlans");
 const inventoryRouter = require("./routes/inventory");
 const skuSalesRouter = require("./routes/skuSales");
 const skuTrafficRouter = require("./routes/skuTraffic");
-const serviceRouter = require("./routes/styleTraffic");
+const styleTrafficRouter = require("./routes/styleTraffic");
 const marketplaceHealthRouter = require("./routes/marketplaceHealth");
 const clientRouter = require("./routes/clients");
 
@@ -61,7 +61,7 @@ const clientRouter = require("./routes/clients");
 //MIDDLEWARES
 app.use(cors());
 app.use(express.json());
-app.use(cookiesParser);
+app.use(cookiesParser());
 
 //USING ROUTES AS A MIDDLEWARE
 app.use("/style", styleRouter);
@@ -74,7 +74,7 @@ app.use("/", stylePlanRouter);
 app.use("/api", inventoryRouter);
 app.use("/api", skuSalesRouter);
 app.use("/", skuTrafficRouter);
-app.use("/", serviceRouter);
+app.use("/", styleTrafficRouter);
 app.use("/api", marketplaceHealthRouter);
 app.use("/", clientRouter);
 

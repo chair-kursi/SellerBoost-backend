@@ -9,7 +9,7 @@ var https = require('https');
 const multer = require("multer");
 
 
-const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
+// const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
 
 const notClientIdAndStyleCode = (styleCode, clientId) => {
 
@@ -28,6 +28,7 @@ const notClientIdAndStyleCode = (styleCode, clientId) => {
 //GETTING ALL STYLES
 router.get('/', async (req, res) => {
     try {
+        const clientId = getClientId();
         const style = await Style.find({ clientId: clientId });
         res.json(style);
 
@@ -39,6 +40,7 @@ router.get('/', async (req, res) => {
 //GETTING A SPECIFIC STYLE
 router.get('/:styleCode', async (req, res) => {
     try {
+        const clientId = getClientId();
         const style = await Style.find({ styleCode: req.params.styleCode, clientId: clientId });
         res.json(style);
     } catch (err) {
@@ -73,6 +75,7 @@ router.post('/add', upload.single("csvFile"), async (req, res) => {
     // }
 
     try {
+        const clientId = getClientId();
         var results = [];
         fs.createReadStream(req.file.path)
             .pipe(csvParser({}))
@@ -112,7 +115,7 @@ router.patch('/update/:styleCode', async (req, res) => {//REMEMBER TO SEND REQUE
     if (Object.keys(validateStyle(req)).length) {
         return res.status(400).json(validateStyle(req));
     }
-
+    const clientId = getClientId();
     const style = await Style.findOne({ clientId: clientId, styleCode: req.params.styleCode });
 
     if (!style)

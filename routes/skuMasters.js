@@ -8,7 +8,7 @@ const fs = require('fs');
 var https = require('https');
 
 
-const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
+// const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
 
 const notClientIdAndSkuCode = (skuCode, clientId) => {
 
@@ -28,6 +28,7 @@ const notClientIdAndSkuCode = (skuCode, clientId) => {
 //GET ALL SKUS
 router.get('/', async (req, res) => {
     try {
+        const clientId = getClientId();
         const sku = await SkuMaster.find({ clientId: clientId })
         res.json(sku);
     } catch (err) {
@@ -39,6 +40,7 @@ router.get('/', async (req, res) => {
 //GET SPECIFIC SKU
 router.get('/:skuCode', async (req, res) => {
     try {
+        const clientId = getClientId();
         const sku = await SkuMaster.find({ skuCode: req.params.skuCode, clientId: clientId })
         res.json(sku);
     } catch (err) {
@@ -70,6 +72,7 @@ router.post('/add', async (req, res) => {
         return res.status(400).json(validateSku(req));
 
     try {
+        const clientId = getClientId();
         var results = [];
         var download = function (url, dest) {
             var file = fs.createWriteStream(dest);
@@ -106,13 +109,13 @@ router.patch('/update/:skuCode', async (req, res) => {
 
     if (Object.keys(validateSku(req)).length)
         return res.status(400).json(validateSku(req));
-
+    const clientId = getClientId();
     const sku = await SkuMaster.findOne({ clientId: clientId, skuCode: req.params.skuCode });
     if (!sku)
         return res.status(400).json({
             data: null,
             error: notClientIdAndSkuCode(req.params.skuCode, clientId)
-        }); 
+        });
 
     try {
         const updatedSku = await SkuMaster.findOneAndUpdate({ skuCode: req.params.skuCode }, req.body);

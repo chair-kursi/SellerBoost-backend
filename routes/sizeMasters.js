@@ -5,7 +5,7 @@ const { validateSize } = require('../validators/sizesValidators');
 const { getClientId } = require('../services/getClientId');
 
 
-const clientId = getClientId();
+// const clientId = getClientId();
 
 const notClientIdAndSizeCode = (sizeCode, clientId) => {
     return {
@@ -24,6 +24,7 @@ const notClientIdAndSizeCode = (sizeCode, clientId) => {
 //GET ALL SIZES
 router.get('/', async (req, res) => {
     try {
+        const clientId = getClientId();
         const sizes = await SizeMaster.find({ clientId: clientId })
         res.json(sizes);
     } catch (err) {
@@ -35,6 +36,7 @@ router.get('/', async (req, res) => {
 //GET SPECIFIC SIZE
 router.get('/:sizeCode', async (req, res) => {
     try {
+        const clientId = getClientId();
         const size = await SizeMaster.findOne({ sizeCode: req.params.sizeCode, clientId: clientId })
         res.json(size);
     } catch (err) {
@@ -49,7 +51,7 @@ router.post('/add', async (req, res) => {
         return res.status(400).json(validateSize(req));
 
     try {
-
+        const clientId = getClientId();
         const size = new SizeMaster(req.body);
         const savedSize = await size.save();
 
@@ -69,6 +71,7 @@ router.patch('/update/:sizeCode', async (req, res) => {
         return res.status(400).json(validateSize(req));
 
     //VALIDATING SIZECODE WITH CLIENT_ID
+    const clientId = getClientId();
     const size = await SizeMaster.findOne({ clientId: clientId, sizeCode: req.params.sizeCode })
     if (!size)//SIZE == NULL
         return res.status(400).json({

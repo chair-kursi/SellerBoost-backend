@@ -11,10 +11,11 @@ const Summary = require('../models/Summary');
 const { getClientId } = require('../services/getClientId');
 
 
-const clientId = getClientId();
+
 
 router.post("/marketplaceHealth", async (req, res) => {
   try {
+    const clientId = getClientId();
     await MarketplaceHealth.deleteMany({});
     const skuMaster = await SkuMaster.find({});
     const styleTraffic = await StyleTraffic.find({});
@@ -170,6 +171,7 @@ router.post("/marketplaceHealth", async (req, res) => {
 
 router.get("/marketplaceHealth", async (req, res) => {
   try {
+    const clientId = getClientId();
     const marketplaceHealth = await MarketplaceHealth.find({});
     const summary = await Summary.findOne({ clientId: clientId });
     res.json({ data: marketplaceHealth[0], summary: summary, error: null });

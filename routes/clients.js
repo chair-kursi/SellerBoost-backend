@@ -28,20 +28,19 @@ router.post("/clientId", async (req, res) => {
         res.json({ message: err });
     }
 })
-global.clientId3;
+
 
 router.get("/clientId", async (req, res) => {
-    console.log("HiI");
-    res.send("hello");
-    // try {
-    //     global.clientId = await Client.findOne({password: req.cookies["LocalId"]});
-    //     console.log(global.clientId);
-    //     res.send(global.clientId);
-    // } catch (err) {
-    //     if (err)
-    //         res.status(400).json({ message: err });
-    //     res.json({ message: err });
-    // }
+    try {
+        console.log(req.cookies);
+        global.clientId = await Client.findOne({password: req.cookies.LocalId});
+        console.log(clientId);
+        res.send(clientId);
+    } catch (err) {
+        if (err)
+            res.status(400).json({ message: err });
+        res.json({ message: err });
+    }
 })
 
 module.exports = router;

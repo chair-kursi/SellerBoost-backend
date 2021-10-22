@@ -10,7 +10,7 @@ const { Parser } = require("json2csv");
 const fs = require("fs");
 const Style = require("../models/Style");
 const Summary = require("../models/Summary");
-const clientId = getClientId();
+// const clientId = getClientId();
 
 //DEFINING CONSTATNTS
 const inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -210,6 +210,7 @@ const setTrafficColor = (colorCount) => {
 router.post("/styleTraffic", async (req, res) => {
 
     try {
+        const clientId = getClientId();
         await SkuTrafficMongo.deleteMany({});
         await StyleTraffic.deleteMany({});
 
@@ -382,6 +383,7 @@ router.post("/styleTraffic", async (req, res) => {
 
 router.get("/styleTraffic", async (req, res) => {
     try {
+        const clientId = getClientId();
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
         const summary = await Summary.findOne({ clientId: clientId });
         res.json({ data: dashBoard, summary: summary, error: null });
@@ -392,6 +394,7 @@ router.get("/styleTraffic", async (req, res) => {
 })
 
 router.get("/exportCsv", async (req, res) => {
+    const clientId = getClientId();
     const dashboard = await StyleTraffic.find({ clientId: clientId });
     const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
     const opts = { fields };
