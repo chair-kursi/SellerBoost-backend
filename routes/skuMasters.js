@@ -73,7 +73,7 @@ router.post('/add', async (req, res) => {
 
     try {
         const clientId = getClientId();
-        var results = [];
+        const results = [];
         var download = function (url, dest) {
             var file = fs.createWriteStream(dest);
             https.get(url, function (response) {
@@ -81,9 +81,9 @@ router.post('/add', async (req, res) => {
                 file.on('finish', function () {
                     fs.createReadStream(dest)
                         .pipe(csvParser({}))
-                        .on("data", (data) => results.push(data))
+                        .on("data", (data) => results.push({...data, clientId: clientId}))
                         .on("end", async () => {
-                            try {
+                            try { 
                                 const result = await SkuMaster.insertMany(results);
                                 res.json(result);
                                 fs.unlink(dest, (err) => {//deleting created file
@@ -97,7 +97,7 @@ router.post('/add', async (req, res) => {
                 });
             });
         }
-        download(req.body.sku, "csvFiles/MarketplaceHealth.csv");
+        download(req.body.skuUrl, "csvFiles/MarketplaceHealth.csv");
 
     } catch (err) {
         res.json({ message: err })

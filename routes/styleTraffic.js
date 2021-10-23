@@ -10,7 +10,9 @@ const { Parser } = require("json2csv");
 const fs = require("fs");
 const Style = require("../models/Style");
 const Summary = require("../models/Summary");
-// const clientId = getClientId();
+var https = require('https');
+const multer = require("multer");
+const csvParser = require("csv-parser");
 
 //DEFINING CONSTATNTS
 const inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -204,8 +206,193 @@ const setTrafficColor = (colorCount) => {
     return trafficColor;
 }
 
+//MULTER
+const fileStorageEngine = multer.diskStorage({
+    destination: (res, file, cb) => {
+        cb(null, "./csvFiles");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "__" + file.originalname);
+    },
+});
 
+const upload = multer({ storage: fileStorageEngine });
 
+router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 }, { name: 'skuInventory', maxCount: 1 }]), async (req, res) => {
+    try {
+        // await SkuSales.deleteMany({ clientId: getClientId() });
+        // await Inventory.deleteMany({ clientId: getClientId() });
+        const err = [], error = [];
+        var resjson = [];
+
+        if (req.files && req.files.skuSales && req.files.skuSales.length && req.files.skuSales[0].path) {
+            const results = [];
+            fs.createReadStream(req.files.skuSales[0].path)
+                .pipe(csvParser({}))
+                .on("data", (data) => {
+                    console.log("hdb1");
+                    let obj = {
+                        clientId: getClientId(),
+                        skuCode: data["Sku Code"],
+                        name: data["Name"],
+                        inventory: data["Inventory"],
+                        totalSales: data["Total Sales"],
+                        dayOfInventory: data["Day Of Inventory"]
+                    }
+                    results.push(obj);
+                })
+                .on("end", async () => {
+                    try {
+                        const result = await SkuSales.insertMany(results);
+                        resjson = [...resjson, result];
+                        console.log("result", result);
+                    } catch (err) {
+                        console.log("error", err);
+                        error.push({ message: err });
+                    }
+                });
+        }
+        else if (req.body.salesUrl) {
+            const results = [];
+            const clientId = getClientId();
+            var download = function (url, dest) {
+                var file = fs.createWriteStream(dest);
+                https.get(url, function (response) {
+                    response.pipe(file);
+                    file.on('finish', function () {
+                        fs.createReadStream(dest)
+                            .pipe(csvParser({}))
+                            .on("data", (data) => {
+                                let obj = {
+                                    clientId: clientId,
+                                    skuCode: data["Sku Code"],
+                                    name: data["Name"],
+                                    inventory: data["Inventory"],
+                                    totalSales: data["Total Sales"],
+                                    dayOfInventory: data["Day Of Inventory"]
+                                }
+                                results.push(obj);
+                            })
+                            .on("end", async () => {
+                                try {
+                                    const result = await SkuSales.insertMany(results);
+                                    resjson.push(result);
+                                    fs.unlink(dest, (err) => {//deleting created file
+                                        if (err) throw err;
+                                        console.log("deleted");
+                                    });
+                                } catch (err) {
+                                    error.push({ message: err });
+                                }
+                            });
+                    });
+                });
+            }
+            download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now());
+        }
+        else err.push({ field: "skuSales", error: "Not Found" });
+        if (req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path) {
+            const results = [];
+            fs.createReadStream(req.files.skuInventory[0].path)
+                .pipe(csvParser({}))
+                .on("data", (data) => {
+                    console.log("hei2");
+                    let obj = {
+                        clientId: getClientId(),
+                        facility: data["Facility"],
+                        itemTypeName: data["Item Type Name"],
+                        itemSkuCode: data["Item SkuCode"],
+                        EAN: data["EAN"],
+                        UPC: data["UPC"],
+                        ISBN: data["ISBN"],
+                        color: data["Color"],
+                        size: data["Size"],
+                        brand: data["Brand"],
+                        categoryName: data["Category Name"],
+                        MRP: data["MRP"],
+                        openSale: data["Open Sale"],
+                        inventory: data["Inventory"],
+                        inventoryBlocked: data["Inventory Blocked"],
+                        badInventory: data["Bad Inventory"],
+                        putawayPending: data["Putaway Pending"],
+                        pendingInventoryAssessment: data["Pending Inventory Assessment"],
+                        stockInTransfer: data["Stock In Transfer"],
+                        openPurchase: data["Open Purchase"],
+                        enabled: data["Enabled"],
+                        costPrice: data["Cost Price"],
+                    }
+                    results.push(obj);
+
+                })
+                .on("end", async () => {
+                    try {
+                        const result = await Inventory.insertMany(results);
+                        // console.log(result);
+                        resjson = [...resjson, result];
+                    } catch (err) {
+                        error.push({ message: err });
+                    }
+                });
+        }
+        else if (req.body.inventoryUrl) {
+            const results = [];
+            var download = function (url, dest) {
+                var file = fs.createWriteStream(dest);
+                https.get(url, function (response) {
+                    response.pipe(file);
+                    file.on('finish', function () {
+                        fs.createReadStream(dest)
+                            .pipe(csvParser({}))
+                            .on("data", (data) => {
+                                let obj = {
+                                    clientId: getClientId(),
+                                    facility: data["Facility"],
+                                    itemTypeName: data["Item Type Name"],
+                                    itemSkuCode: data["Item SkuCode"],
+                                    EAN: parseInt(data["EAN"]),
+                                    UPC: parseInt(data["UPC"]),
+                                    ISBN: parseInt(data["ISBN"]),
+                                    color: data["Color"],
+                                    size: data["Size"],
+                                    brand: data["Brand"],
+                                    categoryName: data["Category Name"],
+                                    MRP: parseFloat(data["MRP"]),
+                                    openSale: parseInt(data["Open Sale"]),
+                                    inventory: parseInt(data["Inventory"]),
+                                    inventoryBlocked: parseInt(data["Inventory Blocked"]),
+                                    badInventory: parseInt(data["Bad Inventory"]),
+                                    putawayPending: parseInt(data["Putaway Pending"]),
+                                    pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
+                                    stockInTransfer: parseInt(data["Stock In Transfer"]),
+                                    openPurchase: parseInt(data["Open Purchase"]),
+                                    enabled: data["Enabled"],
+                                    costPrice: parseInt(data["Cost Price"]),
+                                }
+                                results.push(obj);
+                            })
+                            .on("end", async () => {
+                                try {
+                                    const result = await Inventory.insertMany(results);
+                                    resjson = [...resjson, results];
+                                } catch (err) {
+                                    error.push({ message: err });
+                                }
+                            });
+                    })
+                })
+            }
+            download(req.body.fileUrl, "csvFiles/INVENTORY" + Date.now());
+        }
+        else err.push({ field: "skuInventory", error: "Not Found" });
+        console.log(resjson);
+        if (err.length) {
+            res.status(400).json(err);
+        }
+        else res.json({ resjson: resjson, error: error });
+    } catch (err) {
+        res.status(400).json({ message1: err })
+    }
+})
 
 router.post("/styleTraffic", async (req, res) => {
 

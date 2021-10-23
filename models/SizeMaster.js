@@ -1,6 +1,9 @@
 const mongoose = require("mongoose")
 
 const sizeMasterSchema = mongoose.Schema({
+    clientId:{
+        type: String
+    },
     sizeCode: {
         type: String,
         required: true,
@@ -8,11 +11,11 @@ const sizeMasterSchema = mongoose.Schema({
     },
     name:{
         type: String,
-        required: true
+        // required: true
     },
     order:{
         type: String,
-        required: true
+        // required: true
     },
     created: {
         type: Date,

@@ -15,8 +15,7 @@ const inventorySchema = mongoose.Schema({
   },
   itemSkuCode: {
     type: String,
-    required: true,
-    unique: true
+    required: true, 
   },
   EAN: {
     type: String,
@@ -99,5 +98,5 @@ const inventorySchema = mongoose.Schema({
     default: Date.now(),
   },
 });
-
+inventorySchema.index({clientId: 1, itemSkuCode: 1}, {unique: true});
 module.exports = mongoose.model("inventory", inventorySchema);

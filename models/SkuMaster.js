@@ -1,14 +1,13 @@
 const mongoose = require("mongoose")
 
 const skuMasterSchema = mongoose.Schema({
-    clientID: {
+    clientId: {
         type: String,
-        default: "StyloBug"
     },
     skuCode: {
         type: String,
         required: true,
-        unique: true
+        // unique: true
     },
     sizeCode: {
         type: String, 
@@ -16,8 +15,8 @@ const skuMasterSchema = mongoose.Schema({
     },
     barCode: {
         type: String,
-        required: true, 
-        unique: true
+        // required: true, 
+        // unique: true
     },
     styleCode: {
         type: String,
@@ -32,5 +31,7 @@ const skuMasterSchema = mongoose.Schema({
         default: Date.now()
     }
 })
+
+skuMasterSchema.index({clientId: 1, skuCode: 1}, {unique: true});
 
 module.exports = mongoose.model("skuMaster", skuMasterSchema)

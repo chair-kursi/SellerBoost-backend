@@ -67,43 +67,43 @@ router.post('/add', upload.single("csvFile"), async (req, res) => {
     // else if (req.body.styleCode === "SB-00")
     //     return errorStyleResponse(res);
 
-    //VALIDATING REQUEST
-    // const style = new Style(req.body);
+    // VALIDATING REQUEST
+    const style = new Style(req.body);
 
-    // if (Object.keys(validateStyle(req)).length) {
-    //     return res.status(400).json(validateStyle(req));
-    // }
-
-    try {
-        const clientId = getClientId();
-        var results = [];
-        fs.createReadStream(req.file.path)
-            .pipe(csvParser({}))
-            .on("data", (data) => {
-                results.push({ ...data, name: "style_" + data.styleCode, status: null })
-            })
-            .on("end", async () => {
-                try {
-                    const result = await Style.insertMany(results);
-                    res.json(result);
-                    // res.json(results); 
-                } catch (err) {
-                    res.json({ message: err });
-                }
-            });
-    } catch (err) {
-        res.json({ message: err });
+    if (Object.keys(validateStyle(req)).length) {
+        return res.status(400).json(validateStyle(req));
     }
 
-
     // try {
-    //     const savedStyle = await style.save();
-
-    //     res.status(200).json({ data: savedStyle, error: {} });
-
+    //     const clientId = getClientId();
+    //     var results = [];
+    //     fs.createReadStream(req.file.path)
+    //         .pipe(csvParser({}))
+    //         .on("data", (data) => {
+    //             results.push({ ...data, name: "style_" + data.styleCode, status: null })
+    //         })
+    //         .on("end", async () => {
+    //             try {
+    //                 const result = await Style.insertMany(results);
+    //                 res.json(result);
+    //                 // res.json(results); 
+    //             } catch (err) {
+    //                 res.json({ message: err });
+    //             }
+    //         });
     // } catch (err) {
     //     res.json({ message: err });
     // }
+
+
+    try {
+        const savedStyle = await style.save();
+
+        res.status(200).json({ data: savedStyle, error: {} });
+
+    } catch (err) {
+        res.json({ message: err });
+    }
 })
 
 

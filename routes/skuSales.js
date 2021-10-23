@@ -6,7 +6,6 @@ var https = require('https');
 const multer = require("multer");
 const fs = require("fs");
 const MarketplaceHealth = require("../models/MarketplaceHealth");
-const { getClientId } = require("../services/getClientId");
 
 
 const fileStorageEngine = multer.diskStorage({
@@ -23,7 +22,6 @@ const upload = multer({ storage: fileStorageEngine });
 
 router.post("/skuSales", upload.single("csvFile"), (req, res) => {
   const results = [];
-  const clientId = getClientId();
   var download = function (url, dest) {
     var file = fs.createWriteStream(dest);
     https.get(url, function (response) {
@@ -57,7 +55,7 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
     });
   }
   if (req.body.fileUrl) {
-    download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now())
+    download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now());
   }
   else if (req.file && req.file.path) {
     fs.createReadStream(req.file.path)
@@ -78,14 +76,8 @@ router.post("/skuSales", upload.single("csvFile"), (req, res) => {
   else res.send("Nothing")
 });
 
-router.get("/skuSales", async (req, res) => {
-  try {
-    const clientId = getClientId();
-    const skuSales = await SkuSales.find({});
-    res.json({ data: skuSales, error: null });
-  } catch (err) {
-    res.status(400).json({ message: err });
-  }
-})  
+
+
+
 
 module.exports = router;

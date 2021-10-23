@@ -20,9 +20,9 @@ const getSizeEntity = (req) => {
 
 
 
-validateSize = function (req) {
+validateSize = function (sizeObj) {
 
-	const sizeEntity = getSizeEntity(req);
+	// const sizeEntity = getSizeEntity(req);
 
 	const validateSizeCode = (code) => {
 		if (!code)
@@ -76,19 +76,19 @@ validateSize = function (req) {
 
 
 	var locator = [];
-	const sizeCodeErr = validateSizeCode(sizeEntity.sizeCode);
-	const nameErr = validateName(sizeEntity.name);
+	const sizeCodeErr = validateSizeCode(sizeObj.sizeCode);
+	// const nameErr = validateName(sizeEntity.name);
 
 	if (sizeCodeErr.length)
 		locator = [...locator, {
 			id: "sizeCode",
 			message: sizeCodeErr
 		}];
-	if (nameErr.length)
-		locator = [...locator, {
-			id: "name",
-			message: nameErr
-		}];
+	// if (nameErr.length)
+	// 	locator = [...locator, {
+	// 		id: "name",
+	// 		message: nameErr
+	// 	}];
 
 	let response = {};
 	if (locator.length) {

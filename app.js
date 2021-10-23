@@ -55,6 +55,7 @@ const skuTrafficRouter = require("./routes/skuTraffic");
 const styleTrafficRouter = require("./routes/styleTraffic");
 const marketplaceHealthRouter = require("./routes/marketplaceHealth");
 const clientRouter = require("./routes/clients");
+const setUpRouter = require("./routes/setUp");
 
 
 
@@ -77,6 +78,8 @@ app.use("/", skuTrafficRouter);
 app.use("/", styleTrafficRouter);
 app.use("/api", marketplaceHealthRouter);
 app.use("/", clientRouter);
+app.use("/", setUpRouter);
+
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));

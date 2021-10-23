@@ -23,9 +23,9 @@ const getStyleEntity = (req) => {
 }
 
 
-validateStyle = function (req) {
+validateStyle = function (styleObj) {//previouslt it was req.
 
-	const styleEntity = getStyleEntity(req);
+	// const styleEntity = getStyleEntity(req);
 
 	const validateStyleCode = (code) => {
 		if (!code)
@@ -90,40 +90,40 @@ validateStyle = function (req) {
 	};
 
 	var locator = [];
-	const styleCodeErr = validateStyleCode(styleEntity.styleCode)
-	const nameErr = validateName(styleEntity.name);
-	const frontImageUrlErr = validateUrl(styleEntity.frontImageUrl)
-	const backImageUrlErr = validateUrl(styleEntity.backImageUrl)
-	const zoomImageUrlErr = validateUrl(styleEntity.zoomImageUrl) 
+	const styleCodeErr = validateStyleCode(styleObj.styleCode)
+	// const nameErr = validateName(styleEntity.name);
+	// const frontImageUrlErr = validateUrl(styleEntity.frontImageUrl)
+	// const backImageUrlErr = validateUrl(styleEntity.backImageUrl)
+	// const zoomImageUrlErr = validateUrl(styleEntity.zoomImageUrl) 
 	//not validating hasSize as it is by default handeled by schema
 
 
 
-	if (req.body.styleCode && styleCodeErr.length)
+	if (styleObj.styleCode && styleCodeErr.length)
 		locator = [...locator, {
 			id: "styleCode",
 			message: styleCodeErr
 		}];
-	if (req.body.name && nameErr.length)
-		locator = [...locator, {
-			id: "name",
-			message: nameErr
-		}];
-	if (req.body.frontImageUrl && frontImageUrlErr)
-		locator = [...locator, {
-			id: "frontImageUrl",
-			message: frontImageUrlErr
-		}];
-	if (req.body.backImageUrl && backImageUrlErr)
-		locator = [...locator, {
-			id: "backImageUrl",
-			message: backImageUrlErr
-		}];
-	if (req.body.zoomImageUrl && zoomImageUrlErr)
-		locator = [...locator, {
-			id: "zoomImageUrl",
-			message: zoomImageUrlErr
-		}];
+	// if (req.body.name && nameErr.length)
+	// 	locator = [...locator, {
+	// 		id: "name",
+	// 		message: nameErr
+	// 	}];
+	// if (req.body.frontImageUrl && frontImageUrlErr)
+	// 	locator = [...locator, {
+	// 		id: "frontImageUrl",
+	// 		message: frontImageUrlErr
+	// 	}];
+	// if (req.body.backImageUrl && backImageUrlErr)
+	// 	locator = [...locator, {
+	// 		id: "backImageUrl",
+	// 		message: backImageUrlErr
+	// 	}];
+	// if (req.body.zoomImageUrl && zoomImageUrlErr)
+	// 	locator = [...locator, {
+	// 		id: "zoomImageUrl",
+	// 		message: zoomImageUrlErr
+	// 	}];
 	// if (req.body.hasSize && hasSizeErr.length)
 	// 	locator = [...locator, {
 	// 		id: "hasSize",
