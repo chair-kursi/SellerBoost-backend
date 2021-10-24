@@ -583,8 +583,14 @@ const styleTraffic = async (cookies, res) => {
 
 router.get("/styleTraffic", async (req, res) => {
     try {
-        const client = await Client.findOne({ password: req.cookies.LocalId });
+        var localId = req.cookies.LocalId;
+        
+        if(!localId)
+        localId="6N9yuxkxf6MhmSdOZuvAuze3l943"; 
+
+        const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
+        
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
         const summary = await Summary.findOne({ clientId: clientId });
         res.json({ data: dashBoard, summary: summary, error: null });
