@@ -44,9 +44,8 @@ router.post("/clientId", async (req, res) => {
 
 router.get("/clientId", async (req, res) => {
     try {
-        console.log(req.cookies);
-        global.clientId = await Client.findOne({password: req.cookies.LocalId}); 
-        res.send(global.clientId);
+        // console.log(req.cookies); 
+        res.json({cookies: req.cookies.LocalId});
     } catch (err) {
         if (err)
             res.status(400).json({ message: err });

@@ -3,8 +3,7 @@ const router = express.Router();
 const StyleTraffic = require("../models/StyleTraffic");
 const SkuSales = require("../models/SkuSales");
 const SkuMaster = require('../models/SkuMaster');
-const Inventory = require("../models/Inventory");
-const { getClientId } = require("../services/getClientId");
+const Inventory = require("../models/Inventory"); 
 const SkuTrafficMongo = require("../models/SkuTrafficMongo");
 const { Parser } = require("json2csv");
 const fs = require("fs");
@@ -13,6 +12,7 @@ const Summary = require("../models/Summary");
 var https = require('https');
 const multer = require("multer");
 const csvParser = require("csv-parser");
+const Client = require("../models/Client");
 
 //DEFINING CONSTATNTS
 const inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -220,8 +220,19 @@ const upload = multer({ storage: fileStorageEngine });
 
 router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 }, { name: 'skuInventory', maxCount: 1 }]), async (req, res) => {
     try {
-        // await SkuSales.deleteMany({ clientId: getClientId() });
-        // await Inventory.deleteMany({ clientId: getClientId() });
+        var localId = req.cookies.LocalId;
+        console.log(localId);
+        if(!localId)
+        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+        
+        const client = await Client.findOne({ password: localId });
+        const clientId = client.clientId;
+        console.log(clientId);
+        // TO DELETE THIS
+        // await SkuSales.deleteMany({ clientId: clientId });
+        // await Inventory.deleteMany({ clientId: clientId });
+        // res.send("ok deleted");
+
         const err = [], error = [];
         var resjson = [];
 
@@ -232,7 +243,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                 .on("data", (data) => {
                     console.log("hdb1");
                     let obj = {
-                        clientId: getClientId(),
+                        clientId: clientId,
                         skuCode: data["Sku Code"],
                         name: data["Name"],
                         inventory: data["Inventory"],
@@ -254,7 +265,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
         }
         else if (req.body.salesUrl) {
             const results = [];
-            const clientId = getClientId();
+            const clientId = clientId;
             var download = function (url, dest) {
                 var file = fs.createWriteStream(dest);
                 https.get(url, function (response) {
@@ -298,7 +309,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                 .on("data", (data) => {
                     console.log("hei2");
                     let obj = {
-                        clientId: getClientId(),
+                        clientId: clientId,
                         facility: data["Facility"],
                         itemTypeName: data["Item Type Name"],
                         itemSkuCode: data["Item SkuCode"],
@@ -345,7 +356,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                             .pipe(csvParser({}))
                             .on("data", (data) => {
                                 let obj = {
-                                    clientId: getClientId(),
+                                    clientId: clientId,
                                     facility: data["Facility"],
                                     itemTypeName: data["Item Type Name"],
                                     itemSkuCode: data["Item SkuCode"],
@@ -388,18 +399,21 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
         if (err.length) {
             res.status(400).json(err);
         }
-        else res.json({ resjson: resjson, error: error });
+        else {
+            styleTraffic(req.cookies, res);
+        }
     } catch (err) {
         res.status(400).json({ message1: err })
     }
 })
 
-router.post("/styleTraffic", async (req, res) => {
+const styleTraffic = async (cookies, res) => {
 
     try {
-        const clientId = getClientId();
-        await SkuTrafficMongo.deleteMany({});
-        await StyleTraffic.deleteMany({});
+        const client = await Client.findOne({ password: cookies.LocalId });
+        const clientId = client.clientId;
+        await SkuTrafficMongo.deleteMany({ clientId: clientId });
+        await StyleTraffic.deleteMany({ clientId: clientId });
 
         const allSkus = await SkuMaster.find({ clientId: clientId });
         const allSkuSales = await SkuSales.find({ clientId: clientId });
@@ -511,8 +525,8 @@ router.post("/styleTraffic", async (req, res) => {
 
             itemMaster.push(skuData);
         }
-        await SkuTrafficMongo.insertMany(itemMaster);
-
+        const Item = await SkuTrafficMongo.insertMany(itemMaster);
+        console.log("itemMaster", Item);
         //SETTING TRAFFIC COLORS COUNT 
         const colorCount = setColorCount();
         const colorScore = setColorScore(colorCount);
@@ -558,19 +572,19 @@ router.post("/styleTraffic", async (req, res) => {
             overgreen: summaryObj["OVERGREEN"],
             updated: Date.now()
         }
-        const dashboard = await StyleTraffic.insertMany(finalArray);
-
+        const dashboard = await StyleTraffic.insertMany(finalArray); 
         await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
         res.json({ data: dashboard, summary: summary, error: null });
     }
     catch (err) {
         res.status(400).json({ message: err });
     }
-})
+}
 
 router.get("/styleTraffic", async (req, res) => {
     try {
-        const clientId = getClientId();
+        const client = await Client.findOne({ password: req.cookies.LocalId });
+        const clientId = client.clientId;
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
         const summary = await Summary.findOne({ clientId: clientId });
         res.json({ data: dashBoard, summary: summary, error: null });
@@ -581,7 +595,8 @@ router.get("/styleTraffic", async (req, res) => {
 })
 
 router.get("/exportCsv", async (req, res) => {
-    const clientId = getClientId();
+    const client = await Client.findOne({ password: req.cookies.LocalId });
+    const clientId = client.clientId;
     const dashboard = await StyleTraffic.find({ clientId: clientId });
     const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
     const opts = { fields };

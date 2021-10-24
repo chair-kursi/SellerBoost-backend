@@ -1,14 +1,12 @@
 const mongoose = require("mongoose")
 
 const skuTrafficSchema = mongoose.Schema({
-    clientID: {
-        type: String,
-        default: "StyloBug"
+    clientId: {
+        type: String, 
     },
     skuCode: {
         type: String,
-        required: true,
-        unique: true
+        required: true, 
     },
     styleCode: {
         type: String,
@@ -94,4 +92,5 @@ const skuTrafficSchema = mongoose.Schema({
     }
 })
 
+skuTrafficSchema.index({clientId: 1, skuCode: 1}, {unique: true});
 module.exports = mongoose.model("skuTraffic", skuTrafficSchema)

@@ -1,4 +1,5 @@
 const express = require('express');
+const Client = require('../models/Client');
 const router = express.Router();
 const SkuTraffic = require('../models/SkuTrafficMongo');
 
@@ -8,7 +9,13 @@ const SkuTraffic = require('../models/SkuTrafficMongo');
 
 router.get("/skuTraffic", async(req, res)=>{
     try{
-        const clientId = getClientId();
+        var localId = req.cookies.LocalId; 
+        if(!localId)
+        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+        
+        const client = await Client.findOne({ password: localId });
+        const clientId = client.clientId; 
+        
         const skuTraffic = await SkuTraffic.find({clientID: clientId});
         res.json({data: skuTraffic, error: null});
     }

@@ -2,7 +2,6 @@ const express = require('express');
 const SizeMaster = require('../models/SizeMaster');
 const SkuMaster = require('../models/SkuMaster');
 const Style = require('../models/Style');
-const { getClientId } = require('../services/getClientId');
 const { validateSize } = require('../validators/sizesValidators');
 const { validateSku } = require('../validators/skusValidators');
 const { validateStyle } = require('../validators/stylesValidator');
@@ -10,6 +9,7 @@ const router = express.Router();
 const csvParser = require("csv-parser");
 const multer = require("multer");
 const fs = require("fs");
+const Client = require('../models/Client');
 
 const removeDuplicates = (master, masterInMongo, throwErr) => {
     try {
@@ -61,7 +61,13 @@ const upload = multer({ storage: fileStorageEngine });
 
 router.post('/setUp', upload.single("csvFile"), async (req, res) => {
     try {
-        const clientId = getClientId(), results = [];
+
+        const client = await Client.findOne({ password: req.cookies.LocalId }), results = [];
+        const clientId = client.clientId ;
+        //DELETING FOR TESTING
+        // await SkuMaster.deleteMany({ clientId: clientId });
+        // res.send("OK Deleted SKUS");
+
         const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [];
         if (req.file && req.file.path) {
             fs.createReadStream(req.file.path)
@@ -69,24 +75,23 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                 .on("data", (data) => {
                     results.push(data);
                     let styleObj = {
-                        clientId: getClientId(),
+                        clientId: clientId,
                         styleCode: data["Style Code"],
                         frontImageUrl: data['Front Image Url']
-                    }
-                    // const style = new Style(styleObj);
+                    } 
 
                     if (Object.keys(validateStyle(styleObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateStyle(styleObj).error });
                     else if (!styleCodes.find((ele) => { return ele.styleCode === styleObj.styleCode }))
                         styleCodes.push(styleObj);
                     let skuObj = {
-                        clientId: getClientId(),
+                        clientId: clientId,
                         styleCode: data["Style Code"],
                         skuCode: data["SKU"],
                         sizeCode: data["Size"],
                         barCode: data["Barcode"]
                     }
-                    // const sku = new SkuMaster(skuObj);
+                    
                     if (Object.keys(validateSku(skuObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateSku(skuObj).error });
                     else if (!skuCodes.find((ele) => { return ele.skuCode === skuObj.skuCode }))
@@ -94,10 +99,9 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                     else duplicateSku.push({ rowNum: results.length, rowData: skuObj, error: "Duplicate Sku" });
 
                     let sizeObj = {
-                        clientId: getClientId(),
+                        clientId: clientId,
                         sizeCode: data["Size"]
-                    }
-                    // const size = new SizeMaster(sizeObj);
+                    } 
 
                     if (Object.keys(validateSize(sizeObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateSku(sizeObj).error });
