@@ -62,8 +62,13 @@ const upload = multer({ storage: fileStorageEngine });
 router.post('/setUp', upload.single("csvFile"), async (req, res) => {
     try {
 
-        const client = await Client.findOne({ password: req.cookies.LocalId }), results = [];
-        const clientId = client.clientId ;
+        var localId = req.cookies.LocalId; 
+        if(!localId)
+        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+        
+        const client = await Client.findOne({ password: localId });
+        const clientId = client.clientId; 
+        
         //DELETING FOR TESTING
         // await SkuMaster.deleteMany({ clientId: clientId });
         // res.send("OK Deleted SKUS");

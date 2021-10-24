@@ -58,7 +58,6 @@ const clientRouter = require("./routes/clients");
 const setUpRouter = require("./routes/setUp");
 
 
-
 //MIDDLEWARES
 app.use(cors({ credentials: true}));
 app.use(express.json());

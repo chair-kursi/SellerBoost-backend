@@ -221,13 +221,13 @@ const upload = multer({ storage: fileStorageEngine });
 router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 }, { name: 'skuInventory', maxCount: 1 }]), async (req, res) => {
     try {
         var localId = req.cookies.LocalId;
-        console.log(localId);
+        
         if(!localId)
         localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
         
         const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
-        console.log(clientId);
+        
         // TO DELETE THIS
         // await SkuSales.deleteMany({ clientId: clientId });
         // await Inventory.deleteMany({ clientId: clientId });
@@ -410,8 +410,13 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
 const styleTraffic = async (cookies, res) => {
 
     try {
-        const client = await Client.findOne({ password: cookies.LocalId });
-        const clientId = client.clientId;
+        var localId = cookies.LocalId; 
+        if(!localId)
+        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+        
+        const client = await Client.findOne({ password: localId });
+        const clientId = client.clientId; 
+
         await SkuTrafficMongo.deleteMany({ clientId: clientId });
         await StyleTraffic.deleteMany({ clientId: clientId });
 
