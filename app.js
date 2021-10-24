@@ -60,7 +60,7 @@ const setUpRouter = require("./routes/setUp");
 
 
 //MIDDLEWARES
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+app.use(cors({ credentials: true}));
 app.use(express.json());
 app.use(cookiesParser());
 
