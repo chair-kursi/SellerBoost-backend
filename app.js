@@ -56,10 +56,14 @@ const styleTrafficRouter = require("./routes/styleTraffic");
 const marketplaceHealthRouter = require("./routes/marketplaceHealth");
 const clientRouter = require("./routes/clients");
 const setUpRouter = require("./routes/setUp");
+const summaryRouter = require("./routes/summary");
 
 
 //MIDDLEWARES
-app.use(cors({ credentials: true}));
+app.use(cors({ credentials: true, allowedHeaders:['Origin', 'X-Requested0-With', 'Content-Type', 'Accept'],
+  methods:['GET', 'PUT', 'PATCH', 'POST'],
+  origin:['http://localhost:3000', 'http://dev.suprcommerce.com:3000', 'http://suprcommerce.com',/\.suprcommerce.com\.com$/]
+}));
 app.use(express.json());
 app.use(cookiesParser());
 
@@ -78,6 +82,7 @@ app.use("/", styleTrafficRouter);
 app.use("/api", marketplaceHealthRouter);
 app.use("/", clientRouter);
 app.use("/", setUpRouter);
+app.use("/", summaryRouter);
 
 
 if (process.env.NODE_ENV === "production") {

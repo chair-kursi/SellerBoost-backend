@@ -62,18 +62,18 @@ const upload = multer({ storage: fileStorageEngine });
 router.post('/setUp', upload.single("csvFile"), async (req, res) => {
     try {
 
-        var localId = req.cookies.LocalId; 
-        if(!localId)
-        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-        
+        var localId = req.cookies.LocalId;
+        if (!localId)
+            localId = "6N9yuxkxf6MhmSdOZuvAuze3l943";
+
         const client = await Client.findOne({ password: localId });
-        const clientId = client.clientId; 
-        
+        const clientId = client.clientId;
+
         //DELETING FOR TESTING
         // await SkuMaster.deleteMany({ clientId: clientId });
         // res.send("OK Deleted SKUS");
 
-        const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [];
+        const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [], results=[];
         if (req.file && req.file.path) {
             fs.createReadStream(req.file.path)
                 .pipe(csvParser({}))
@@ -81,9 +81,10 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                     results.push(data);
                     let styleObj = {
                         clientId: clientId,
+                        status: null,
                         styleCode: data["Style Code"],
                         frontImageUrl: data['Front Image Url']
-                    } 
+                    }
 
                     if (Object.keys(validateStyle(styleObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateStyle(styleObj).error });
@@ -96,7 +97,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                         sizeCode: data["Size"],
                         barCode: data["Barcode"]
                     }
-                    
+
                     if (Object.keys(validateSku(skuObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateSku(skuObj).error });
                     else if (!skuCodes.find((ele) => { return ele.skuCode === skuObj.skuCode }))
@@ -106,7 +107,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                     let sizeObj = {
                         clientId: clientId,
                         sizeCode: data["Size"]
-                    } 
+                    }
 
                     if (Object.keys(validateSize(sizeObj)).length)
                         error.push({ rowNum: results.length, rowData: data, error: validateSku(sizeObj).error });
@@ -148,7 +149,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                             data: {
                                 styleCodes: styles,
                                 skuCodes: skus,
-                                sizeCode: sizes, 
+                                sizeCode: sizes,
                             },
                             error: {
                                 inValid: error,

@@ -264,8 +264,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                 });
         }
         else if (req.body.salesUrl) {
-            const results = [];
-            const clientId = clientId;
+            const results = []; 
             var download = function (url, dest) {
                 var file = fs.createWriteStream(dest);
                 https.get(url, function (response) {
