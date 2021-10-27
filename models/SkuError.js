@@ -2,8 +2,7 @@ const mongoose = require("mongoose")
 
 const skuErrorSchema = mongoose.Schema({
     clientId: {
-        type:String,
-        default: "StyloBug",
+        type:String, 
         required: true
     },
     skuCode: {

@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 
 const inventorySchema = mongoose.Schema({
   clientId: {
-    type: String,
-    default: "StyloBug"
+    type: String, 
   },
   facility: {
     type: String,

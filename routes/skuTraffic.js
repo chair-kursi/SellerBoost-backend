@@ -1,26 +1,20 @@
 const express = require('express');
 const Client = require('../models/Client');
 const router = express.Router();
-const SkuTraffic = require('../models/SkuTrafficMongo');
+const SkuTraffic = require('../models/SkuTrafficMongo'); 
 
 
-// const clientId = getClientId(); //sir as we are getting clientId from a func, is it OK to invoke getClientId() just once here??
-
-
-router.get("/skuTraffic", async(req, res)=>{
-    try{
-        var localId = req.cookies.LocalId; 
-        if(!localId)
-        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-        
+router.get("/skuTraffic", async (req, res) => {
+    try {
+        var localId = req.cookies.LocalId;
         const client = await Client.findOne({ password: localId });
-        const clientId = client.clientId; 
-        
-        const skuTraffic = await SkuTraffic.find({clientID: clientId});
-        res.json({data: skuTraffic, error: null});
+        const clientId = client.clientId;
+
+        const skuTraffic = await SkuTraffic.find({ clientId: clientId });
+        res.json({ data: skuTraffic, error: null });
     }
-    catch(err){
-        res.status(400).json({message: err});
+    catch (err) {
+        res.status(400).json({ message: err });
     }
 })
 

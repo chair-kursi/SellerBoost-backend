@@ -2,8 +2,7 @@ const mongoose = require("mongoose")
 
 const summarySchema = mongoose.Schema({
     clientId: {
-        type: String,
-        default: "StyloBug",
+        type: String, 
         required: true
     },
     dashboard: {

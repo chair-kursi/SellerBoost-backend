@@ -63,8 +63,8 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
     try {
 
         var localId = req.cookies.LocalId;
-        if (!localId)
-            localId = "6N9yuxkxf6MhmSdOZuvAuze3l943";
+        // if(!localId)
+        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
 
         const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
@@ -73,7 +73,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
         // await SkuMaster.deleteMany({ clientId: clientId });
         // res.send("OK Deleted SKUS");
 
-        const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [], results=[];
+        const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [], results = [];
         if (req.file && req.file.path) {
             fs.createReadStream(req.file.path)
                 .pipe(csvParser({}))

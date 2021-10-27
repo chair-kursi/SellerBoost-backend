@@ -3,7 +3,7 @@ const router = express.Router();
 const StyleTraffic = require("../models/StyleTraffic");
 const SkuSales = require("../models/SkuSales");
 const SkuMaster = require('../models/SkuMaster');
-const Inventory = require("../models/Inventory"); 
+const Inventory = require("../models/Inventory");
 const SkuTrafficMongo = require("../models/SkuTrafficMongo");
 const { Parser } = require("json2csv");
 const fs = require("fs");
@@ -216,18 +216,59 @@ const fileStorageEngine = multer.diskStorage({
     },
 });
 
+//INVENTORY OBJ
+const createInventoryObj = (clientId, data) => {
+    const obj = {
+        clientId: clientId,
+        facility: data["Facility"],
+        itemTypeName: data["Item Type Name"],
+        itemSkuCode: data["Item SkuCode"],
+        EAN: parseInt(data["EAN"]),
+        UPC: parseInt(data["UPC"]),
+        ISBN: parseInt(data["ISBN"]),
+        color: data["Color"],
+        size: data["Size"],
+        brand: data["Brand"],
+        categoryName: data["Category Name"],
+        MRP: parseFloat(data["MRP"]),
+        openSale: parseInt(data["Open Sale"]),
+        inventory: parseInt(data["Inventory"]),
+        inventoryBlocked: parseInt(data["Inventory Blocked"]),
+        badInventory: parseInt(data["Bad Inventory"]),
+        putawayPending: parseInt(data["Putaway Pending"]),
+        pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
+        stockInTransfer: parseInt(data["Stock In Transfer"]),
+        openPurchase: parseInt(data["Open Purchase"]),
+        enabled: data["Enabled"],
+        costPrice: parseInt(data["Cost Price"]),
+    }
+    return obj;
+}
+
+const createSalesObj = (clientId, data) => {
+    const obj = {
+        clientId: clientId,
+        skuCode: data["Sku Code"],
+        name: data["Name"],
+        inventory: data["Inventory"],
+        totalSales: data["Total Sales"],
+        dayOfInventory: data["Day Of Inventory"]
+    }
+    return obj;
+}
+
 const upload = multer({ storage: fileStorageEngine });
 
 router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 }, { name: 'skuInventory', maxCount: 1 }]), async (req, res) => {
     try {
         var localId = req.cookies.LocalId;
-        
-        if(!localId)
-        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-        
+
+        // if(!localId)
+        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+
         const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
-        
+
         // TO DELETE THIS
         // await SkuSales.deleteMany({ clientId: clientId });
         // await Inventory.deleteMany({ clientId: clientId });
@@ -241,22 +282,14 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
             fs.createReadStream(req.files.skuSales[0].path)
                 .pipe(csvParser({}))
                 .on("data", (data) => {
-                    console.log("hdb1");
-                    let obj = {
-                        clientId: clientId,
-                        skuCode: data["Sku Code"],
-                        name: data["Name"],
-                        inventory: data["Inventory"],
-                        totalSales: data["Total Sales"],
-                        dayOfInventory: data["Day Of Inventory"]
-                    }
+                    let obj = createSalesObj(clientId, data);
                     results.push(obj);
                 })
                 .on("end", async () => {
                     try {
                         const result = await SkuSales.insertMany(results);
                         resjson = [...resjson, result];
-                        console.log("result", result);
+                        console.log("Resp of saving skuSales in DB", result);
                     } catch (err) {
                         console.log("error", err);
                         error.push({ message: err });
@@ -264,7 +297,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                 });
         }
         else if (req.body.salesUrl) {
-            const results = []; 
+            const results = [];
             var download = function (url, dest) {
                 var file = fs.createWriteStream(dest);
                 https.get(url, function (response) {
@@ -273,14 +306,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                         fs.createReadStream(dest)
                             .pipe(csvParser({}))
                             .on("data", (data) => {
-                                let obj = {
-                                    clientId: clientId,
-                                    skuCode: data["Sku Code"],
-                                    name: data["Name"],
-                                    inventory: data["Inventory"],
-                                    totalSales: data["Total Sales"],
-                                    dayOfInventory: data["Day Of Inventory"]
-                                }
+                                let obj = createSalesObj(clientId, data);
                                 results.push(obj);
                             })
                             .on("end", async () => {
@@ -301,38 +327,14 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
             download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now());
         }
         else err.push({ field: "skuSales", error: "Not Found" });
+
         if (req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path) {
             const results = [];
             fs.createReadStream(req.files.skuInventory[0].path)
                 .pipe(csvParser({}))
                 .on("data", (data) => {
-                    console.log("hei2");
-                    let obj = {
-                        clientId: clientId,
-                        facility: data["Facility"],
-                        itemTypeName: data["Item Type Name"],
-                        itemSkuCode: data["Item SkuCode"],
-                        EAN: data["EAN"],
-                        UPC: data["UPC"],
-                        ISBN: data["ISBN"],
-                        color: data["Color"],
-                        size: data["Size"],
-                        brand: data["Brand"],
-                        categoryName: data["Category Name"],
-                        MRP: data["MRP"],
-                        openSale: data["Open Sale"],
-                        inventory: data["Inventory"],
-                        inventoryBlocked: data["Inventory Blocked"],
-                        badInventory: data["Bad Inventory"],
-                        putawayPending: data["Putaway Pending"],
-                        pendingInventoryAssessment: data["Pending Inventory Assessment"],
-                        stockInTransfer: data["Stock In Transfer"],
-                        openPurchase: data["Open Purchase"],
-                        enabled: data["Enabled"],
-                        costPrice: data["Cost Price"],
-                    }
+                    let obj = createInventoryObj(clientId, data);
                     results.push(obj);
-
                 })
                 .on("end", async () => {
                     try {
@@ -354,36 +356,13 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                         fs.createReadStream(dest)
                             .pipe(csvParser({}))
                             .on("data", (data) => {
-                                let obj = {
-                                    clientId: clientId,
-                                    facility: data["Facility"],
-                                    itemTypeName: data["Item Type Name"],
-                                    itemSkuCode: data["Item SkuCode"],
-                                    EAN: parseInt(data["EAN"]),
-                                    UPC: parseInt(data["UPC"]),
-                                    ISBN: parseInt(data["ISBN"]),
-                                    color: data["Color"],
-                                    size: data["Size"],
-                                    brand: data["Brand"],
-                                    categoryName: data["Category Name"],
-                                    MRP: parseFloat(data["MRP"]),
-                                    openSale: parseInt(data["Open Sale"]),
-                                    inventory: parseInt(data["Inventory"]),
-                                    inventoryBlocked: parseInt(data["Inventory Blocked"]),
-                                    badInventory: parseInt(data["Bad Inventory"]),
-                                    putawayPending: parseInt(data["Putaway Pending"]),
-                                    pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
-                                    stockInTransfer: parseInt(data["Stock In Transfer"]),
-                                    openPurchase: parseInt(data["Open Purchase"]),
-                                    enabled: data["Enabled"],
-                                    costPrice: parseInt(data["Cost Price"]),
-                                }
+                                let obj = createInventoryObj(clientId, data);
                                 results.push(obj);
                             })
                             .on("end", async () => {
                                 try {
                                     const result = await Inventory.insertMany(results);
-                                    resjson = [...resjson, results];
+                                    resjson = [...resjson, result];
                                 } catch (err) {
                                     error.push({ message: err });
                                 }
@@ -399,22 +378,22 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
             res.status(400).json(err);
         }
         else {
-            styleTraffic(req.cookies, res);
+            styleTraffic(req, res);
         }
     } catch (err) {
         res.status(400).json({ message1: err })
     }
 })
 
-const styleTraffic = async (cookies, res) => {
+const styleTraffic = async (req, res) => {
 
     try {
-        var localId = cookies.LocalId; 
-        if(!localId)
-        localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-        
+        var localId = req.cookies.LocalId;
+        // if(!localId)
+        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
+
         const client = await Client.findOne({ password: localId });
-        const clientId = client.clientId; 
+        const clientId = client.clientId;
 
         await SkuTrafficMongo.deleteMany({ clientId: clientId });
         await StyleTraffic.deleteMany({ clientId: clientId });
@@ -576,7 +555,7 @@ const styleTraffic = async (cookies, res) => {
             overgreen: summaryObj["OVERGREEN"],
             updated: Date.now()
         }
-        const dashboard = await StyleTraffic.insertMany(finalArray); 
+        const dashboard = await StyleTraffic.insertMany(finalArray);
         await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
         res.json({ data: dashboard, summary: summary, error: null });
     }
@@ -588,13 +567,13 @@ const styleTraffic = async (cookies, res) => {
 router.get("/styleTraffic", async (req, res) => {
     try {
         var localId = req.cookies.LocalId;
-        
-        if(!localId)
-        localId="6N9yuxkxf6MhmSdOZuvAuze3l943"; 
+
+        // if(!localId)
+        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943"; 
 
         const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
-        
+
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
         const summary = await Summary.findOne({ clientId: clientId });
         res.json({ data: dashBoard, summary: summary, error: null });
