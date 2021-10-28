@@ -90,7 +90,7 @@ validateStyle = function (styleObj) {//previouslt it was req.
 	};
 
 	var locator = [];
-	const styleCodeErr = validateStyleCode(styleObj.styleCode)
+	const styleCodeErr = validateStyleCode(styleObj);
 	// const nameErr = validateName(styleEntity.name);
 	// const frontImageUrlErr = validateUrl(styleEntity.frontImageUrl)
 	// const backImageUrlErr = validateUrl(styleEntity.backImageUrl)
@@ -137,7 +137,7 @@ validateStyle = function (styleObj) {//previouslt it was req.
 		response = {
 			data: {},
 			error: {
-				errorCode: "GenEx",
+				errorCode: "Invalid StyleCode",
 				httpStatus: 400,
 				locator: locator,
 				internalMessage: "Handler dispatch failed; nested exception is java.lang.Error: Unresolved compilation problem: \n\tSyntax error, insert \";\" to complete ReturnStatement\n",

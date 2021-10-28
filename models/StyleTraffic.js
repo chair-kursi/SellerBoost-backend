@@ -1,13 +1,12 @@
 const mongoose = require("mongoose");
 
-const ServiceSchema = mongoose.Schema({
+const StyleTrafficSchema = mongoose.Schema({
     clientId: {
         type: String, 
     },
     styleCode: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     trafficActual: {
         type: String,
@@ -47,6 +46,7 @@ const ServiceSchema = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("styleTraffic", ServiceSchema);
+StyleTrafficSchema.index({clientId: 1, styleCode: 1}, {unique: true});
+module.exports = mongoose.model("styleTraffic", StyleTrafficSchema);
 
 

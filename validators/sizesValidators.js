@@ -93,10 +93,13 @@ validateSize = function (sizeObj) {
 	let response = {};
 	if (locator.length) {
 		var timeStamp = new Date().toString();
+		var errorCode = "";
+		for (var i = 0; i < locator.length; i++)
+			errorCode += locator[i].message + ", ";
 		response = {
 			data: {},
 			error: {
-				errorCode: "GenEx",
+				errorCode: errorCode,
 				httpStatus: 400,
 				locator: locator,
 				internalMessage: "Validation Error",

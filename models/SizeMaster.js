@@ -6,8 +6,7 @@ const sizeMasterSchema = mongoose.Schema({
     },
     sizeCode: {
         type: String,
-        required: true,
-        unique: true
+        required: true, 
     },
     name:{
         type: String,
@@ -27,4 +26,5 @@ const sizeMasterSchema = mongoose.Schema({
     }
 })
 
+sizeMasterSchema.index({clientId: 1, styleCode: 1}, {unique: true});
 module.exports = mongoose.model("sizeMaster", sizeMasterSchema)

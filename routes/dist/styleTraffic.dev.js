@@ -1,5 +1,13 @@
 "use strict";
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
@@ -7,6 +15,8 @@ function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread n
 function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+function _asyncIterator(iterable) { var method; if (typeof Symbol !== "undefined") { if (Symbol.asyncIterator) { method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { method = iterable[Symbol.iterator]; if (method != null) return method.call(iterable); } } throw new TypeError("Object is not async iterable"); }
 
 var express = require("express");
 
@@ -37,7 +47,10 @@ var multer = require("multer");
 
 var csvParser = require("csv-parser");
 
-var Client = require("../models/Client"); //DEFINING CONSTATNTS
+var Client = require("../models/Client");
+
+var _require2 = require("express-validator"),
+    header = _require2.header; //DEFINING CONSTATNTS
 
 
 var inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -243,24 +256,24 @@ var createInventoryObj = function createInventoryObj(clientId, data) {
     facility: data["Facility"],
     itemTypeName: data["Item Type Name"],
     itemSkuCode: data["Item SkuCode"],
-    EAN: parseInt(data["EAN"]),
-    UPC: parseInt(data["UPC"]),
-    ISBN: parseInt(data["ISBN"]),
+    EAN: parseInt(data["EAN"]) || 0,
+    UPC: parseInt(data["UPC"]) || 0,
+    ISBN: parseInt(data["ISBN"]) || 0,
     color: data["Color"],
     size: data["Size"],
     brand: data["Brand"],
     categoryName: data["Category Name"],
-    MRP: parseFloat(data["MRP"]),
-    openSale: parseInt(data["Open Sale"]),
-    inventory: parseInt(data["Inventory"]),
-    inventoryBlocked: parseInt(data["Inventory Blocked"]),
-    badInventory: parseInt(data["Bad Inventory"]),
-    putawayPending: parseInt(data["Putaway Pending"]),
-    pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
-    stockInTransfer: parseInt(data["Stock In Transfer"]),
-    openPurchase: parseInt(data["Open Purchase"]),
+    MRP: parseFloat(data["MRP"]) || 0,
+    openSale: parseInt(data["Open Sale"]) || 0,
+    inventory: parseInt(data["Inventory"]) || 0,
+    inventoryBlocked: parseInt(data["Inventory Blocked"]) || 0,
+    badInventory: parseInt(data["Bad Inventory"]) || 0,
+    putawayPending: parseInt(data["Putaway Pending"]) || 0,
+    pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]) || 0,
+    stockInTransfer: parseInt(data["Stock In Transfer"]) || 0,
+    openPurchase: parseInt(data["Open Purchase"]) || 0,
     enabled: data["Enabled"],
-    costPrice: parseInt(data["Cost Price"])
+    costPrice: parseInt(data["Cost Price"]) || 0
   };
   return obj;
 };
@@ -277,79 +290,373 @@ var createSalesObj = function createSalesObj(clientId, data) {
   return obj;
 };
 
+var checkForHeaders = function checkForHeaders(defaultHeaders, incomingHeaders) {
+  if (defaultHeaders.length !== incomingHeaders.length) return {
+    matched: false,
+    error: "Columns must be " + defaultHeaders.length + " in length"
+  };
+  var countOfHeaders = 0;
+
+  for (var i = 0; i < defaultHeaders.length; i++) {
+    for (var j = 0; j < incomingHeaders.length; j++) {
+      if (defaultHeaders[i] === incomingHeaders[j]) {
+        countOfHeaders += 1;
+        defaultHeaders[i] = '-1';
+        incomingHeaders[j] = '-2';
+      }
+    }
+  }
+
+  var unmatchedHeaders = [];
+
+  for (var i = 0; i < incomingHeaders.length; i++) {
+    if (incomingHeaders[i] !== '-2') unmatchedHeaders.push(incomingHeaders[i]);
+  }
+
+  if (countOfHeaders === defaultHeaders.length) return {
+    matched: true
+  };
+  console.log("unmatchedHeaders", unmatchedHeaders);
+  return {
+    matched: false,
+    error: unmatchedHeaders.join(", ") + " didn't matched"
+  };
+};
+
 var upload = multer({
   storage: fileStorageEngine
 });
+
+function createReadStream(destination) {
+  var readSales;
+  return regeneratorRuntime.async(function createReadStream$(_context) {
+    while (1) {
+      switch (_context.prev = _context.next) {
+        case 0:
+          readSales = fs.createReadStream(destination).pipe(csvParser({}));
+          return _context.abrupt("return", readSales);
+
+        case 2:
+        case "end":
+          return _context.stop();
+      }
+    }
+  });
+}
+
+function readCsvOfSales(defaultSalesHeaders, destination, clientId) {
+  var readSales, err, results, headers, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, row, obj, checkHeaders;
+
+  return regeneratorRuntime.async(function readCsvOfSales$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          _context2.next = 2;
+          return regeneratorRuntime.awrap(createReadStream(destination));
+
+        case 2:
+          readSales = _context2.sent;
+          err = [], results = [];
+          headers = [];
+          _iteratorNormalCompletion = true;
+          _didIteratorError = false;
+          _context2.prev = 7;
+          _iterator = _asyncIterator(readSales);
+
+        case 9:
+          _context2.next = 11;
+          return regeneratorRuntime.awrap(_iterator.next());
+
+        case 11:
+          _step = _context2.sent;
+          _iteratorNormalCompletion = _step.done;
+          _context2.next = 15;
+          return regeneratorRuntime.awrap(_step.value);
+
+        case 15:
+          _value = _context2.sent;
+
+          if (_iteratorNormalCompletion) {
+            _context2.next = 24;
+            break;
+          }
+
+          row = _value;
+          obj = createSalesObj(clientId, row);
+          results.push(obj);
+          if (!headers.length) headers = Object.keys(row);
+
+        case 21:
+          _iteratorNormalCompletion = true;
+          _context2.next = 9;
+          break;
+
+        case 24:
+          _context2.next = 30;
+          break;
+
+        case 26:
+          _context2.prev = 26;
+          _context2.t0 = _context2["catch"](7);
+          _didIteratorError = true;
+          _iteratorError = _context2.t0;
+
+        case 30:
+          _context2.prev = 30;
+          _context2.prev = 31;
+
+          if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
+            _context2.next = 35;
+            break;
+          }
+
+          _context2.next = 35;
+          return regeneratorRuntime.awrap(_iterator["return"]());
+
+        case 35:
+          _context2.prev = 35;
+
+          if (!_didIteratorError) {
+            _context2.next = 38;
+            break;
+          }
+
+          throw _iteratorError;
+
+        case 38:
+          return _context2.finish(35);
+
+        case 39:
+          return _context2.finish(30);
+
+        case 40:
+          checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
+
+          if (!checkHeaders.matched) {
+            err.push({
+              Source: "Sales",
+              Row: "NA",
+              Data: "NA",
+              Error: checkHeaders.error
+            });
+          } // console.log(results);
+
+
+          return _context2.abrupt("return", {
+            error: err,
+            result: results
+          });
+
+        case 43:
+        case "end":
+          return _context2.stop();
+      }
+    }
+  }, null, null, [[7, 26, 30, 40], [31,, 35, 39]]);
+}
+
+function readCsvOfInventory(defaultSalesHeaders, destination, clientId) {
+  var readSales, err, results, headers, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _value2, row, obj, checkHeaders;
+
+  return regeneratorRuntime.async(function readCsvOfInventory$(_context3) {
+    while (1) {
+      switch (_context3.prev = _context3.next) {
+        case 0:
+          _context3.next = 2;
+          return regeneratorRuntime.awrap(createReadStream(destination));
+
+        case 2:
+          readSales = _context3.sent;
+          err = [], results = [];
+          headers = [];
+          _iteratorNormalCompletion2 = true;
+          _didIteratorError2 = false;
+          _context3.prev = 7;
+          _iterator2 = _asyncIterator(readSales);
+
+        case 9:
+          _context3.next = 11;
+          return regeneratorRuntime.awrap(_iterator2.next());
+
+        case 11:
+          _step2 = _context3.sent;
+          _iteratorNormalCompletion2 = _step2.done;
+          _context3.next = 15;
+          return regeneratorRuntime.awrap(_step2.value);
+
+        case 15:
+          _value2 = _context3.sent;
+
+          if (_iteratorNormalCompletion2) {
+            _context3.next = 24;
+            break;
+          }
+
+          row = _value2;
+          obj = createInventoryObj(clientId, row);
+          if (!headers.length) headers = Object.keys(row);
+          results.push(obj);
+
+        case 21:
+          _iteratorNormalCompletion2 = true;
+          _context3.next = 9;
+          break;
+
+        case 24:
+          _context3.next = 30;
+          break;
+
+        case 26:
+          _context3.prev = 26;
+          _context3.t0 = _context3["catch"](7);
+          _didIteratorError2 = true;
+          _iteratorError2 = _context3.t0;
+
+        case 30:
+          _context3.prev = 30;
+          _context3.prev = 31;
+
+          if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
+            _context3.next = 35;
+            break;
+          }
+
+          _context3.next = 35;
+          return regeneratorRuntime.awrap(_iterator2["return"]());
+
+        case 35:
+          _context3.prev = 35;
+
+          if (!_didIteratorError2) {
+            _context3.next = 38;
+            break;
+          }
+
+          throw _iteratorError2;
+
+        case 38:
+          return _context3.finish(35);
+
+        case 39:
+          return _context3.finish(30);
+
+        case 40:
+          checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
+
+          if (!checkHeaders.matched) {
+            err.push({
+              Source: "Inventory",
+              Row: "NA",
+              Data: "NA",
+              Error: checkHeaders.error
+            });
+          } // console.log(results);
+
+
+          return _context3.abrupt("return", {
+            error: err,
+            result: results
+          });
+
+        case 43:
+        case "end":
+          return _context3.stop();
+      }
+    }
+  }, null, null, [[7, 26, 30, 40], [31,, 35, 39]]);
+}
+
 router.post("/dashboardUploads", upload.fields([{
   name: 'skuSales',
   maxCount: 1
 }, {
   name: 'skuInventory',
   maxCount: 1
-}]), function _callee5(req, res) {
-  var localId, client, clientId, err, error, resjson, results, _results, download, _results2, _results3;
+}]), function _callee3(req, res) {
+  var localId, client, clientId, error, err, resultsobj, OBJ, defaultSalesHeaders, defaultInventoryHeaders, file, results, headerErr, result, _results, download, _file, _results2, _headerErr, _result2, _results3;
 
-  return regeneratorRuntime.async(function _callee5$(_context5) {
+  return regeneratorRuntime.async(function _callee3$(_context6) {
     while (1) {
-      switch (_context5.prev = _context5.next) {
+      switch (_context6.prev = _context6.next) {
         case 0:
-          _context5.prev = 0;
-          localId = req.cookies.LocalId; // if(!localId)
-          // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-
-          _context5.next = 4;
+          _context6.prev = 0;
+          localId = req.cookies.LocalId;
+          _context6.next = 4;
           return regeneratorRuntime.awrap(Client.findOne({
             password: localId
           }));
 
         case 4:
-          client = _context5.sent;
+          client = _context6.sent;
           clientId = client.clientId; // TO DELETE THIS
-          // await SkuSales.deleteMany({ clientId: clientId });
-          // await Inventory.deleteMany({ clientId: clientId });
-          // res.send("ok deleted");
 
-          err = [], error = [];
-          resjson = [];
+          _context6.next = 8;
+          return regeneratorRuntime.awrap(SkuSales.deleteMany({
+            clientId: clientId
+          }));
 
-          if (req.files && req.files.skuSales && req.files.skuSales.length && req.files.skuSales[0].path) {
-            results = [];
-            fs.createReadStream(req.files.skuSales[0].path).pipe(csvParser({})).on("data", function (data) {
-              var obj = createSalesObj(clientId, data);
-              results.push(obj);
-            }).on("end", function _callee() {
-              var result;
-              return regeneratorRuntime.async(function _callee$(_context) {
-                while (1) {
-                  switch (_context.prev = _context.next) {
-                    case 0:
-                      _context.prev = 0;
-                      _context.next = 3;
-                      return regeneratorRuntime.awrap(SkuSales.insertMany(results));
+        case 8:
+          _context6.next = 10;
+          return regeneratorRuntime.awrap(Inventory.deleteMany({
+            clientId: clientId
+          }));
 
-                    case 3:
-                      result = _context.sent;
-                      resjson = [].concat(_toConsumableArray(resjson), [result]);
-                      console.log("Resp of saving skuSales in DB", result);
-                      _context.next = 12;
-                      break;
+        case 10:
+          error = [];
+          err = [];
+          resultsobj = {};
+          defaultSalesHeaders = ['Sku Code', 'Name', 'Total Sales', 'Day Of Inventory', 'Inventory'];
+          defaultInventoryHeaders = ['Facility', 'Item Type Name', 'Item SkuCode', 'EAN', 'UPC', 'IJBN', 'Color', 'Size', 'Brand', 'Category Name', 'MRP', 'Open Sale', 'Inventory', 'Inventory Blocked', 'Bad Inventory', 'Putaway Pending', 'Pending Inventory Assessment', 'Stock In Transfer', 'Open Purchase', 'Enabled', 'Cost Price'];
 
-                    case 8:
-                      _context.prev = 8;
-                      _context.t0 = _context["catch"](0);
-                      console.log("error", _context.t0);
-                      error.push({
-                        message: _context.t0
-                      });
+          if (!(req.files && req.files.skuSales && req.files.skuSales.length && req.files.skuSales[0].path)) {
+            _context6.next = 36;
+            break;
+          }
 
-                    case 12:
-                    case "end":
-                      return _context.stop();
-                  }
-                }
-              }, null, null, [[0, 8]]);
-            });
-          } else if (req.body.salesUrl) {
+          _context6.prev = 16;
+          _context6.next = 19;
+          return regeneratorRuntime.awrap(readCsvOfSales(defaultSalesHeaders, req.files.skuSales[0].path, clientId).then(function (e) {
+            return e;
+          }));
+
+        case 19:
+          file = _context6.sent;
+          results = file.result;
+          headerErr = file.error;
+          err.push.apply(err, _toConsumableArray(headerErr));
+
+          if (headerErr.length) {
+            _context6.next = 28;
+            break;
+          }
+
+          _context6.next = 26;
+          return regeneratorRuntime.awrap(SkuSales.insertMany(results));
+
+        case 26:
+          result = _context6.sent;
+          resultsobj = _objectSpread({}, resultsobj, {
+            skuSales: result
+          });
+
+        case 28:
+          _context6.next = 34;
+          break;
+
+        case 30:
+          _context6.prev = 30;
+          _context6.t0 = _context6["catch"](16);
+          console.log("error", _context6.t0);
+          error.push({
+            message: _context6.t0
+          });
+
+        case 34:
+          _context6.next = 37;
+          break;
+
+        case 36:
+          if (req.body.salesUrl) {
             _results = [];
 
             download = function download(url, dest) {
@@ -357,41 +664,50 @@ router.post("/dashboardUploads", upload.fields([{
               https.get(url, function (response) {
                 response.pipe(file);
                 file.on('finish', function () {
-                  fs.createReadStream(dest).pipe(csvParser({})).on("data", function (data) {
+                  fs.createReadStream(dest).pipe(csvParser({})).on('headers', function (headers) {
+                    if (!checkForHeaders(defaultSalesHeaders, headers)) res.json({
+                      data: null,
+                      error: "Headers didn't matched"
+                    });
+                  }).on("data", function (data) {
                     var obj = createSalesObj(clientId, data);
 
                     _results.push(obj);
-                  }).on("end", function _callee2() {
-                    var result;
-                    return regeneratorRuntime.async(function _callee2$(_context2) {
+                  }).on("end", function _callee() {
+                    var _result;
+
+                    return regeneratorRuntime.async(function _callee$(_context4) {
                       while (1) {
-                        switch (_context2.prev = _context2.next) {
+                        switch (_context4.prev = _context4.next) {
                           case 0:
-                            _context2.prev = 0;
-                            _context2.next = 3;
+                            _context4.prev = 0;
+                            _context4.next = 3;
                             return regeneratorRuntime.awrap(SkuSales.insertMany(_results));
 
                           case 3:
-                            result = _context2.sent;
-                            resjson.push(result);
+                            _result = _context4.sent;
+                            resultsobj = _objectSpread({}, resultsobj, {
+                              skuSales: _result
+                            }); // console.log("Resp of saving skuSales in DB", result);
+
                             fs.unlink(dest, function (err) {
                               //deleting created file
                               if (err) throw err;
                               console.log("deleted");
                             });
-                            _context2.next = 11;
+                            _context4.next = 11;
                             break;
 
                           case 8:
-                            _context2.prev = 8;
-                            _context2.t0 = _context2["catch"](0);
+                            _context4.prev = 8;
+                            _context4.t0 = _context4["catch"](0);
                             error.push({
-                              message: _context2.t0
+                              message: _context4.t0
                             });
 
                           case 11:
                           case "end":
-                            return _context2.stop();
+                            return _context4.stop();
                         }
                       }
                     }, null, null, [[0, 8]]);
@@ -402,48 +718,61 @@ router.post("/dashboardUploads", upload.fields([{
 
             download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now());
           } else err.push({
-            field: "skuSales",
+            Source: "skuSales",
+            Row: "NA",
+            Data: "NA",
             error: "Not Found"
           });
 
-          if (req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path) {
-            _results2 = [];
-            fs.createReadStream(req.files.skuInventory[0].path).pipe(csvParser({})).on("data", function (data) {
-              var obj = createInventoryObj(clientId, data);
+        case 37:
+          if (!(req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path)) {
+            _context6.next = 57;
+            break;
+          }
 
-              _results2.push(obj);
-            }).on("end", function _callee3() {
-              var result;
-              return regeneratorRuntime.async(function _callee3$(_context3) {
-                while (1) {
-                  switch (_context3.prev = _context3.next) {
-                    case 0:
-                      _context3.prev = 0;
-                      _context3.next = 3;
-                      return regeneratorRuntime.awrap(Inventory.insertMany(_results2));
+          _context6.prev = 38;
+          _context6.next = 41;
+          return regeneratorRuntime.awrap(readCsvOfInventory(defaultInventoryHeaders, req.files.skuInventory[0].path, clientId).then(function (e) {
+            return e;
+          }));
 
-                    case 3:
-                      result = _context3.sent;
-                      // console.log(result);
-                      resjson = [].concat(_toConsumableArray(resjson), [result]);
-                      _context3.next = 10;
-                      break;
+        case 41:
+          _file = _context6.sent;
+          _results2 = _file.result;
+          _headerErr = _file.error;
+          err.push.apply(err, _toConsumableArray(_headerErr));
 
-                    case 7:
-                      _context3.prev = 7;
-                      _context3.t0 = _context3["catch"](0);
-                      error.push({
-                        message: _context3.t0
-                      });
+          if (_headerErr.length) {
+            _context6.next = 50;
+            break;
+          }
 
-                    case 10:
-                    case "end":
-                      return _context3.stop();
-                  }
-                }
-              }, null, null, [[0, 7]]);
-            });
-          } else if (req.body.inventoryUrl) {
+          _context6.next = 48;
+          return regeneratorRuntime.awrap(Inventory.insertMany(_results2));
+
+        case 48:
+          _result2 = _context6.sent;
+          resultsobj = _objectSpread({}, resultsobj, {
+            inventory: _result2
+          });
+
+        case 50:
+          _context6.next = 55;
+          break;
+
+        case 52:
+          _context6.prev = 52;
+          _context6.t1 = _context6["catch"](38);
+          res.json({
+            message: _context6.t1
+          });
+
+        case 55:
+          _context6.next = 58;
+          break;
+
+        case 57:
+          if (req.body.inventoryUrl) {
             _results3 = [];
 
             download = function download(url, dest) {
@@ -451,36 +780,44 @@ router.post("/dashboardUploads", upload.fields([{
               https.get(url, function (response) {
                 response.pipe(file);
                 file.on('finish', function () {
-                  fs.createReadStream(dest).pipe(csvParser({})).on("data", function (data) {
+                  fs.createReadStream(dest).pipe(csvParser({})).on('headers', function (headers) {
+                    if (!checkForHeaders(defaultInventoryHeaders, headers)) res.json({
+                      data: null,
+                      error: "Headers didn't matched"
+                    });
+                  }).on("data", function (data) {
                     var obj = createInventoryObj(clientId, data);
 
                     _results3.push(obj);
-                  }).on("end", function _callee4() {
-                    var result;
-                    return regeneratorRuntime.async(function _callee4$(_context4) {
+                  }).on("end", function _callee2() {
+                    var _result3;
+
+                    return regeneratorRuntime.async(function _callee2$(_context5) {
                       while (1) {
-                        switch (_context4.prev = _context4.next) {
+                        switch (_context5.prev = _context5.next) {
                           case 0:
-                            _context4.prev = 0;
-                            _context4.next = 3;
+                            _context5.prev = 0;
+                            _context5.next = 3;
                             return regeneratorRuntime.awrap(Inventory.insertMany(_results3));
 
                           case 3:
-                            result = _context4.sent;
-                            resjson = [].concat(_toConsumableArray(resjson), [result]);
-                            _context4.next = 10;
+                            _result3 = _context5.sent;
+                            resultsobj = _objectSpread({}, resultsobj, {
+                              inventory: _result3
+                            });
+                            _context5.next = 10;
                             break;
 
                           case 7:
-                            _context4.prev = 7;
-                            _context4.t0 = _context4["catch"](0);
+                            _context5.prev = 7;
+                            _context5.t0 = _context5["catch"](0);
                             error.push({
-                              message: _context4.t0
+                              message: _context5.t0
                             });
 
                           case 10:
                           case "end":
-                            return _context4.stop();
+                            return _context5.stop();
                         }
                       }
                     }, null, null, [[0, 7]]);
@@ -491,102 +828,96 @@ router.post("/dashboardUploads", upload.fields([{
 
             download(req.body.fileUrl, "csvFiles/INVENTORY" + Date.now());
           } else err.push({
-            field: "skuInventory",
+            Source: "Inventory",
+            Row: "NA",
+            Data: "NA",
             error: "Not Found"
           });
 
-          console.log(resjson);
-
+        case 58:
+          // console.log("err", err);
           if (err.length) {
-            res.status(400).json(err);
+            exportCsv(res, err);
           } else {
-            styleTraffic(req, res);
+            styleTraffic(req, res, clientId, resultsobj).then(function (dashboard) {
+              res.json(dashboard);
+            });
           }
 
-          _context5.next = 17;
+          _context6.next = 64;
           break;
 
-        case 14:
-          _context5.prev = 14;
-          _context5.t0 = _context5["catch"](0);
+        case 61:
+          _context6.prev = 61;
+          _context6.t2 = _context6["catch"](0);
           res.status(400).json({
-            message1: _context5.t0
+            message1: _context6.t2
           });
 
-        case 17:
+        case 64:
         case "end":
-          return _context5.stop();
+          return _context6.stop();
       }
     }
-  }, null, null, [[0, 14]]);
+  }, null, null, [[0, 61], [16, 30], [38, 52]]);
 });
 
-var styleTraffic = function styleTraffic(req, res) {
-  var localId, i, itemMaster;
-  return regeneratorRuntime.async(function styleTraffic$(_context7) {
+var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
+  var i, itemMaster, _ret;
+
+  return regeneratorRuntime.async(function styleTraffic$(_context8) {
     while (1) {
-      switch (_context7.prev = _context7.next) {
+      switch (_context8.prev = _context8.next) {
         case 0:
-          _context7.prev = 0;
-          _context7.next = 3;
-          return regeneratorRuntime.awrap(function _callee6() {
-            var client, clientId, allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, skuData, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, statusArr, summaryObj, _loop, _i2, summary, dashboard;
+          _context8.prev = 0;
+          _context8.next = 3;
+          return regeneratorRuntime.awrap(function _callee4() {
+            var allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, skuData, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, statusArr, summaryObj, _loop, _i2, summary, dashboard, summaryRes;
 
-            return regeneratorRuntime.async(function _callee6$(_context6) {
+            return regeneratorRuntime.async(function _callee4$(_context7) {
               while (1) {
-                switch (_context6.prev = _context6.next) {
+                switch (_context7.prev = _context7.next) {
                   case 0:
-                    localId = req.cookies.LocalId; // if(!localId)
-                    // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-
-                    _context6.next = 3;
-                    return regeneratorRuntime.awrap(Client.findOne({
-                      password: localId
-                    }));
-
-                  case 3:
-                    client = _context6.sent;
-                    clientId = client.clientId;
-                    _context6.next = 7;
+                    _context7.next = 2;
                     return regeneratorRuntime.awrap(SkuTrafficMongo.deleteMany({
                       clientId: clientId
                     }));
 
-                  case 7:
-                    _context6.next = 9;
+                  case 2:
+                    _context7.next = 4;
                     return regeneratorRuntime.awrap(StyleTraffic.deleteMany({
                       clientId: clientId
                     }));
 
-                  case 9:
-                    _context6.next = 11;
+                  case 4:
+                    _context7.next = 6;
                     return regeneratorRuntime.awrap(SkuMaster.find({
                       clientId: clientId
                     }));
 
-                  case 11:
-                    allSkus = _context6.sent;
-                    _context6.next = 14;
+                  case 6:
+                    allSkus = _context7.sent;
+                    _context7.next = 9;
                     return regeneratorRuntime.awrap(SkuSales.find({
                       clientId: clientId
                     }));
 
-                  case 14:
-                    allSkuSales = _context6.sent;
-                    _context6.next = 17;
+                  case 9:
+                    allSkuSales = _context7.sent;
+                    _context7.next = 12;
                     return regeneratorRuntime.awrap(Inventory.find({
                       clientId: clientId
                     }));
 
-                  case 17:
-                    allSkuInventory = _context6.sent;
-                    _context6.next = 20;
+                  case 12:
+                    allSkuInventory = _context7.sent;
+                    _context7.next = 15;
                     return regeneratorRuntime.awrap(Style.find({
                       clientId: clientId
                     }));
 
-                  case 20:
-                    styleMaster = _context6.sent;
+                  case 15:
+                    styleMaster = _context7.sent;
                     skuSalesMap = new Map();
                     skuInvMap = new Map();
 
@@ -663,13 +994,12 @@ var styleTraffic = function styleTraffic(req, res) {
                       itemMaster.push(skuData);
                     }
 
-                    _context6.next = 30;
+                    _context7.next = 25;
                     return regeneratorRuntime.awrap(SkuTrafficMongo.insertMany(itemMaster));
 
-                  case 30:
-                    Item = _context6.sent;
-                    console.log("itemMaster", Item); //SETTING TRAFFIC COLORS COUNT 
-
+                  case 25:
+                    Item = _context7.sent;
+                    //SETTING TRAFFIC COLORS COUNT 
                     colorCount = setColorCount();
                     colorScore = setColorScore(colorCount);
                     colorProduct = setColorProduct(totalSalesOfStylecode, colorScore);
@@ -718,19 +1048,19 @@ var styleTraffic = function styleTraffic(req, res) {
                       return a.salesRank - b.salesRank;
                     });
                     summary = {
-                      soldout: summaryObj["SOLDOUT"],
-                      red: summaryObj["RED"],
-                      orange: summaryObj["ORANGE"],
-                      green: summaryObj["GREEN"],
-                      overgreen: summaryObj["OVERGREEN"],
+                      soldout: summaryObj["SOLDOUT"] || 0,
+                      red: summaryObj["RED"] || 0,
+                      orange: summaryObj["ORANGE"] || 0,
+                      green: summaryObj["GREEN"] || 0,
+                      overgreen: summaryObj["OVERGREEN"] || 0,
                       updated: Date.now()
                     };
-                    _context6.next = 47;
+                    _context7.next = 41;
                     return regeneratorRuntime.awrap(StyleTraffic.insertMany(finalArray));
 
-                  case 47:
-                    dashboard = _context6.sent;
-                    _context6.next = 50;
+                  case 41:
+                    dashboard = _context7.sent;
+                    _context7.next = 44;
                     return regeneratorRuntime.awrap(Summary.updateOne({
                       clientId: clientId
                     }, {
@@ -739,146 +1069,122 @@ var styleTraffic = function styleTraffic(req, res) {
                       "new": true
                     }));
 
-                  case 50:
-                    res.json({
-                      data: dashboard,
-                      summary: summary,
-                      error: null
+                  case 44:
+                    summaryRes = _context7.sent;
+                    return _context7.abrupt("return", {
+                      v: {
+                        data: dashboard,
+                        summary: summaryRes,
+                        resultsobj: resultsobj,
+                        error: null
+                      }
                     });
 
-                  case 51:
+                  case 46:
                   case "end":
-                    return _context6.stop();
+                    return _context7.stop();
                 }
               }
             });
           }());
 
         case 3:
-          _context7.next = 8;
+          _ret = _context8.sent;
+
+          if (!(_typeof(_ret) === "object")) {
+            _context8.next = 6;
+            break;
+          }
+
+          return _context8.abrupt("return", _ret.v);
+
+        case 6:
+          _context8.next = 11;
           break;
 
-        case 5:
-          _context7.prev = 5;
-          _context7.t0 = _context7["catch"](0);
+        case 8:
+          _context8.prev = 8;
+          _context8.t0 = _context8["catch"](0);
           res.status(400).json({
-            message: _context7.t0
+            message: _context8.t0
           });
 
-        case 8:
+        case 11:
         case "end":
-          return _context7.stop();
+          return _context8.stop();
       }
     }
-  }, null, null, [[0, 5]]);
+  }, null, null, [[0, 8]]);
 };
 
-router.get("/styleTraffic", function _callee7(req, res) {
-  var localId, client, _clientId, dashBoard, summary;
+router.get("/styleTraffic", function _callee5(req, res) {
+  var localId, client, _clientId, dashBoard;
 
-  return regeneratorRuntime.async(function _callee7$(_context8) {
+  return regeneratorRuntime.async(function _callee5$(_context9) {
     while (1) {
-      switch (_context8.prev = _context8.next) {
+      switch (_context9.prev = _context9.next) {
         case 0:
-          _context8.prev = 0;
+          _context9.prev = 0;
           localId = req.cookies.LocalId; // if(!localId)
           // localId="6N9yuxkxf6MhmSdOZuvAuze3l943"; 
 
-          _context8.next = 4;
+          _context9.next = 4;
           return regeneratorRuntime.awrap(Client.findOne({
             password: localId
           }));
 
         case 4:
-          client = _context8.sent;
+          client = _context9.sent;
           _clientId = client.clientId;
-          _context8.next = 8;
+          _context9.next = 8;
           return regeneratorRuntime.awrap(StyleTraffic.find({
             clientId: _clientId
           }));
 
         case 8:
-          dashBoard = _context8.sent;
-          _context8.next = 11;
-          return regeneratorRuntime.awrap(Summary.findOne({
-            clientId: _clientId
-          }));
-
-        case 11:
-          summary = _context8.sent;
+          dashBoard = _context9.sent;
           res.json({
             data: dashBoard,
-            summary: summary,
             error: null
           });
-          _context8.next = 18;
+          _context9.next = 15;
           break;
 
-        case 15:
-          _context8.prev = 15;
-          _context8.t0 = _context8["catch"](0);
+        case 12:
+          _context9.prev = 12;
+          _context9.t0 = _context9["catch"](0);
           res.json({
             data: null,
-            error: _context8.t0
+            error: _context9.t0
           });
 
-        case 18:
-        case "end":
-          return _context8.stop();
-      }
-    }
-  }, null, null, [[0, 15]]);
-});
-router.get("/exportCsv", function _callee8(req, res) {
-  var client, clientId, dashboard, fields, opts, parser, csv;
-  return regeneratorRuntime.async(function _callee8$(_context9) {
-    while (1) {
-      switch (_context9.prev = _context9.next) {
-        case 0:
-          _context9.next = 2;
-          return regeneratorRuntime.awrap(Client.findOne({
-            password: req.cookies.LocalId
-          }));
-
-        case 2:
-          client = _context9.sent;
-          clientId = client.clientId;
-          _context9.next = 6;
-          return regeneratorRuntime.awrap(StyleTraffic.find({
-            clientId: clientId
-          }));
-
-        case 6:
-          dashboard = _context9.sent;
-          fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
-          opts = {
-            fields: fields
-          };
-
-          try {
-            parser = new Parser(opts);
-            csv = parser.parse(dashboard);
-            fs.writeFile("csvFiles/csv.csv", csv, function (err) {
-              if (err) throw err;
-              res.attachment("csvFiles/csv.csv"); // res.writeHead(200, {'Content-Type': 'application/csv'}); 
-              // res.setHeader("'Content-Type', 'application/csv'")
-
-              res.set('Content-Type', 'application/csv');
-              res.download("csvFiles/csv.csv");
-              console.log("file Saved"); // fs.unlink('csvFiles/EXPORT_CSV.csv', (err) => {
-              //     if (err) throw err;
-              //     console.log('csvFiles/EXPORT_CSV.csv was deleted');
-              // })
-            }); // res.status(200).send(csv);
-          } catch (err) {
-            console.error(err);
-          }
-
-        case 10:
+        case 15:
         case "end":
           return _context9.stop();
       }
     }
-  });
+  }, null, null, [[0, 12]]);
 });
+
+var exportCsv = function exportCsv(res, json) {
+  console.log("json", json);
+  var fields = ["Source", "Row", "Data", "Error"];
+  var opts = {
+    fields: fields
+  };
+
+  try {
+    var parser = new Parser(opts);
+    var csv = parser.parse(json);
+    var destination = "csvFiles/Sales&InventoryError" + Date.now() + ".csv";
+    fs.writeFile(destination, csv, function (err) {
+      if (err) throw err;
+      res.set('Content-Type', 'application/csv');
+      res.download(destination);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 module.exports = router;

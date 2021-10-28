@@ -13,6 +13,7 @@ var https = require('https');
 const multer = require("multer");
 const csvParser = require("csv-parser");
 const Client = require("../models/Client");
+const { header } = require("express-validator");
 
 //DEFINING CONSTATNTS
 const inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -223,24 +224,24 @@ const createInventoryObj = (clientId, data) => {
         facility: data["Facility"],
         itemTypeName: data["Item Type Name"],
         itemSkuCode: data["Item SkuCode"],
-        EAN: parseInt(data["EAN"]),
-        UPC: parseInt(data["UPC"]),
-        ISBN: parseInt(data["ISBN"]),
+        EAN: parseInt(data["EAN"]) || 0,
+        UPC: parseInt(data["UPC"]) || 0,
+        ISBN: parseInt(data["ISBN"]) || 0,
         color: data["Color"],
         size: data["Size"],
         brand: data["Brand"],
         categoryName: data["Category Name"],
-        MRP: parseFloat(data["MRP"]),
-        openSale: parseInt(data["Open Sale"]),
-        inventory: parseInt(data["Inventory"]),
-        inventoryBlocked: parseInt(data["Inventory Blocked"]),
-        badInventory: parseInt(data["Bad Inventory"]),
-        putawayPending: parseInt(data["Putaway Pending"]),
-        pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]),
-        stockInTransfer: parseInt(data["Stock In Transfer"]),
-        openPurchase: parseInt(data["Open Purchase"]),
+        MRP: parseFloat(data["MRP"]) || 0,
+        openSale: parseInt(data["Open Sale"]) || 0,
+        inventory: parseInt(data["Inventory"]) || 0,
+        inventoryBlocked: parseInt(data["Inventory Blocked"]) || 0,
+        badInventory: parseInt(data["Bad Inventory"]) || 0,
+        putawayPending: parseInt(data["Putaway Pending"]) || 0,
+        pendingInventoryAssessment: parseInt(data["Pending Inventory Assessment"]) || 0,
+        stockInTransfer: parseInt(data["Stock In Transfer"]) || 0,
+        openPurchase: parseInt(data["Open Purchase"]) || 0,
         enabled: data["Enabled"],
-        costPrice: parseInt(data["Cost Price"]),
+        costPrice: parseInt(data["Cost Price"]) || 0,
     }
     return obj;
 }
@@ -257,44 +258,151 @@ const createSalesObj = (clientId, data) => {
     return obj;
 }
 
+const checkForHeaders = (defaultHeaders, incomingHeaders) => {
+    if (defaultHeaders.length !== incomingHeaders.length)
+        return {
+            matched: false,
+            error: "Columns must be "+ defaultHeaders.length +" in length"
+        };
+    let countOfHeaders = 0;
+    for (var i = 0; i < defaultHeaders.length; i++) {
+        for (var j = 0; j < incomingHeaders.length; j++) {
+            if (defaultHeaders[i] === incomingHeaders[j]) {
+                countOfHeaders += 1;
+                defaultHeaders[i] = '-1';
+                incomingHeaders[j] = '-2';
+            }
+        }
+    }
+    const unmatchedHeaders = [];
+    for (var i = 0; i < incomingHeaders.length; i++) {
+        if (incomingHeaders[i] !== '-2')
+            unmatchedHeaders.push(incomingHeaders[i]);
+    }
+
+    if (countOfHeaders === defaultHeaders.length)
+        return {
+            matched: true
+        };
+    console.log("unmatchedHeaders", unmatchedHeaders);
+    return {
+        matched: false,
+        error: unmatchedHeaders.join(", ") + " didn't matched"
+    };
+}
+
 const upload = multer({ storage: fileStorageEngine });
+
+async function createReadStream(destination) {
+    const readSales = fs.createReadStream(destination).pipe(csvParser({}));
+    return readSales;
+}
+
+
+async function readCsvOfSales(defaultSalesHeaders, destination, clientId) {
+    const readSales = await createReadStream(destination);
+    const err = [], results = [];
+    var headers = [];
+    for await (const row of readSales) {
+        const obj = createSalesObj(clientId, row);
+        results.push(obj);
+        if (!headers.length)
+            headers = Object.keys(row);
+    }
+
+    const checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
+
+    if (!checkHeaders.matched) {
+        err.push({ Source: "Sales", Row: "NA", Data: "NA", Error: checkHeaders.error });
+    }
+    // console.log(results);
+    return {
+        error: err,
+        result: results
+    }
+}
+
+async function readCsvOfInventory(defaultSalesHeaders, destination, clientId) {
+    const readSales = await createReadStream(destination);
+    const err = [], results = [];
+    var headers = [];
+    for await (const row of readSales) {
+        const obj = createInventoryObj(clientId, row);
+        if (!headers.length)
+            headers = Object.keys(row);
+        results.push(obj);
+    }
+
+    const checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
+    if (!checkHeaders.matched) {
+        err.push({ Source: "Inventory", Row: "NA", Data: "NA", Error: checkHeaders.error });
+    }
+    // console.log(results);
+    return {
+        error: err,
+        result: results
+    }
+}
+
+
 
 router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 }, { name: 'skuInventory', maxCount: 1 }]), async (req, res) => {
     try {
         var localId = req.cookies.LocalId;
 
-        // if(!localId)
-        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-
         const client = await Client.findOne({ password: localId });
         const clientId = client.clientId;
 
         // TO DELETE THIS
-        // await SkuSales.deleteMany({ clientId: clientId });
-        // await Inventory.deleteMany({ clientId: clientId });
-        // res.send("ok deleted");
+        await SkuSales.deleteMany({ clientId: clientId });
+        await Inventory.deleteMany({ clientId: clientId });
 
-        const err = [], error = [];
-        var resjson = [];
+        const error = [];
+        var err = [];
+        var resultsobj = {}, OBJ;
+
+        const defaultSalesHeaders = ['Sku Code', 'Name', 'Total Sales', 'Day Of Inventory', 'Inventory'];
+        const defaultInventoryHeaders = [
+            'Facility',
+            'Item Type Name',
+            'Item SkuCode',
+            'EAN',
+            'UPC',
+            'IJBN',
+            'Color',
+            'Size',
+            'Brand',
+            'Category Name',
+            'MRP',
+            'Open Sale',
+            'Inventory',
+            'Inventory Blocked',
+            'Bad Inventory',
+            'Putaway Pending',
+            'Pending Inventory Assessment',
+            'Stock In Transfer',
+            'Open Purchase',
+            'Enabled',
+            'Cost Price'
+        ];
 
         if (req.files && req.files.skuSales && req.files.skuSales.length && req.files.skuSales[0].path) {
-            const results = [];
-            fs.createReadStream(req.files.skuSales[0].path)
-                .pipe(csvParser({}))
-                .on("data", (data) => {
-                    let obj = createSalesObj(clientId, data);
-                    results.push(obj);
-                })
-                .on("end", async () => {
-                    try {
-                        const result = await SkuSales.insertMany(results);
-                        resjson = [...resjson, result];
-                        console.log("Resp of saving skuSales in DB", result);
-                    } catch (err) {
-                        console.log("error", err);
-                        error.push({ message: err });
-                    }
-                });
+            try {
+                const file = await readCsvOfSales(defaultSalesHeaders, req.files.skuSales[0].path, clientId).then((e) => { return e });
+
+                const results = file.result;
+                const headerErr = file.error;
+                err.push(...headerErr);
+
+                if (!headerErr.length) {
+                    const result = await SkuSales.insertMany(results);
+                    resultsobj = { ...resultsobj, skuSales: result };
+                }
+                // console.log("Resp of saving skuSales in DB", result);
+            } catch (err) {
+                console.log("error", err);
+                error.push({ message: err });
+            }
         }
         else if (req.body.salesUrl) {
             const results = [];
@@ -305,6 +413,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                     file.on('finish', function () {
                         fs.createReadStream(dest)
                             .pipe(csvParser({}))
+                            .on('headers', (headers) => { if (!checkForHeaders(defaultSalesHeaders, headers)) res.json({ data: null, error: "Headers didn't matched" }) })
                             .on("data", (data) => {
                                 let obj = createSalesObj(clientId, data);
                                 results.push(obj);
@@ -312,7 +421,9 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                             .on("end", async () => {
                                 try {
                                     const result = await SkuSales.insertMany(results);
-                                    resjson.push(result);
+                                    resultsobj = { ...resultsobj, skuSales: result };
+                                    // console.log("Resp of saving skuSales in DB", result);
+
                                     fs.unlink(dest, (err) => {//deleting created file
                                         if (err) throw err;
                                         console.log("deleted");
@@ -326,25 +437,23 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
             }
             download(req.body.fileUrl, "csvFiles/SKUSALES" + Date.now());
         }
-        else err.push({ field: "skuSales", error: "Not Found" });
+        else err.push({ Source: "skuSales", Row: "NA", Data: "NA", error: "Not Found" });
 
         if (req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path) {
-            const results = [];
-            fs.createReadStream(req.files.skuInventory[0].path)
-                .pipe(csvParser({}))
-                .on("data", (data) => {
-                    let obj = createInventoryObj(clientId, data);
-                    results.push(obj);
-                })
-                .on("end", async () => {
-                    try {
-                        const result = await Inventory.insertMany(results);
-                        // console.log(result);
-                        resjson = [...resjson, result];
-                    } catch (err) {
-                        error.push({ message: err });
-                    }
-                });
+            try {
+                const file = await readCsvOfInventory(defaultInventoryHeaders, req.files.skuInventory[0].path, clientId).then((e) => { return e });
+
+                const results = file.result;
+                const headerErr = file.error;
+                err.push(...headerErr)
+                if (!headerErr.length) {
+                    const result = await Inventory.insertMany(results);
+                    resultsobj = { ...resultsobj, inventory: result };
+                }
+            }
+            catch (err) {
+                res.json({ message: err });
+            }
         }
         else if (req.body.inventoryUrl) {
             const results = [];
@@ -355,6 +464,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                     file.on('finish', function () {
                         fs.createReadStream(dest)
                             .pipe(csvParser({}))
+                            .on('headers', (headers) => { if (!checkForHeaders(defaultInventoryHeaders, headers)) res.json({ data: null, error: "Headers didn't matched" }) })
                             .on("data", (data) => {
                                 let obj = createInventoryObj(clientId, data);
                                 results.push(obj);
@@ -362,7 +472,7 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
                             .on("end", async () => {
                                 try {
                                     const result = await Inventory.insertMany(results);
-                                    resjson = [...resjson, result];
+                                    resultsobj = { ...resultsobj, inventory: result };
                                 } catch (err) {
                                     error.push({ message: err });
                                 }
@@ -372,28 +482,23 @@ router.post("/dashboardUploads", upload.fields([{ name: 'skuSales', maxCount: 1 
             }
             download(req.body.fileUrl, "csvFiles/INVENTORY" + Date.now());
         }
-        else err.push({ field: "skuInventory", error: "Not Found" });
-        console.log(resjson);
+        else err.push({ Source: "Inventory", Row: "NA", Data: "NA", error: "Not Found" });
+
+        // console.log("err", err);
         if (err.length) {
-            res.status(400).json(err);
+            exportCsv(res, err);
         }
         else {
-            styleTraffic(req, res);
+            styleTraffic(req, res, clientId, resultsobj).then((dashboard) => { res.json(dashboard) });
         }
     } catch (err) {
-        res.status(400).json({ message1: err })
+        res.status(400).json({ message1: err });
     }
 })
 
-const styleTraffic = async (req, res) => {
+const styleTraffic = async (req, res, clientId, resultsobj) => {
 
     try {
-        var localId = req.cookies.LocalId;
-        // if(!localId)
-        // localId="6N9yuxkxf6MhmSdOZuvAuze3l943";
-
-        const client = await Client.findOne({ password: localId });
-        const clientId = client.clientId;
 
         await SkuTrafficMongo.deleteMany({ clientId: clientId });
         await StyleTraffic.deleteMany({ clientId: clientId });
@@ -509,7 +614,7 @@ const styleTraffic = async (req, res) => {
             itemMaster.push(skuData);
         }
         const Item = await SkuTrafficMongo.insertMany(itemMaster);
-        console.log("itemMaster", Item);
+
         //SETTING TRAFFIC COLORS COUNT 
         const colorCount = setColorCount();
         const colorScore = setColorScore(colorCount);
@@ -548,16 +653,16 @@ const styleTraffic = async (req, res) => {
         }
         finalArray.sort((a, b) => { return a.salesRank - b.salesRank });
         let summary = {
-            soldout: summaryObj["SOLDOUT"],
-            red: summaryObj["RED"],
-            orange: summaryObj["ORANGE"],
-            green: summaryObj["GREEN"],
-            overgreen: summaryObj["OVERGREEN"],
+            soldout: summaryObj["SOLDOUT"] || 0,
+            red: summaryObj["RED"] || 0,
+            orange: summaryObj["ORANGE"] || 0,
+            green: summaryObj["GREEN"] || 0,
+            overgreen: summaryObj["OVERGREEN"] || 0,
             updated: Date.now()
         }
         const dashboard = await StyleTraffic.insertMany(finalArray);
-        await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
-        res.json({ data: dashboard, summary: summary, error: null });
+        const summaryRes = await Summary.updateOne({ clientId: clientId }, { dashboard: summary }, { new: true });
+        return { data: dashboard, summary: summaryRes, resultsobj: resultsobj, error: null };
     }
     catch (err) {
         res.status(400).json({ message: err });
@@ -575,43 +680,31 @@ router.get("/styleTraffic", async (req, res) => {
         const clientId = client.clientId;
 
         const dashBoard = await StyleTraffic.find({ clientId: clientId });
-        const summary = await Summary.findOne({ clientId: clientId });
-        res.json({ data: dashBoard, summary: summary, error: null });
+        res.json({ data: dashBoard, error: null });
     }
     catch (err) {
         res.json({ data: null, error: err })
     }
 })
 
-router.get("/exportCsv", async (req, res) => {
-    const client = await Client.findOne({ password: req.cookies.LocalId });
-    const clientId = client.clientId;
-    const dashboard = await StyleTraffic.find({ clientId: clientId });
-    const fields = ["clientId", "styleCode", "trafficActual", "trafficVirtual", "currentInv", "salesNumber", "salesRank", "replenishmentRank"];
+const exportCsv = (res, json) => {
+    console.log("json", json);
+    const fields = ["Source", "Row", "Data", "Error"];
     const opts = { fields };
     try {
         const parser = new Parser(opts);
-        const csv = parser.parse(dashboard);
-        fs.writeFile("csvFiles/csv.csv", csv, function (err) {
+        const csv = parser.parse(json);
+        const destination = "csvFiles/Sales&InventoryError" + Date.now() + ".csv";
+        fs.writeFile(destination, csv, function (err) {
             if (err)
                 throw err;
-
-            res.attachment("csvFiles/csv.csv");
-            // res.writeHead(200, {'Content-Type': 'application/csv'}); 
-            // res.setHeader("'Content-Type', 'application/csv'")
             res.set('Content-Type', 'application/csv');
-            res.download("csvFiles/csv.csv");
-            console.log("file Saved");
-            // fs.unlink('csvFiles/EXPORT_CSV.csv', (err) => {
-            //     if (err) throw err;
-            //     console.log('csvFiles/EXPORT_CSV.csv was deleted');
-            // })
+            res.download(destination);
         });
-        // res.status(200).send(csv);
     } catch (err) {
         console.error(err);
     }
-})
+}
 
 
 module.exports = router;

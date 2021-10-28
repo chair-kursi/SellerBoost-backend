@@ -82,10 +82,14 @@ validateSku = function (skuObj) {
     let response = {};
     if (locator.length) {
         var timeStamp = new Date().toString();
+        var errorCode = "";
+        for (var i = 0; i < locator.length; i++)
+            errorCode += locator[i].message+", ";
+
         response = {
             data: {},
             error: {
-                errorCode: "GenEx",
+                errorCode: errorCode,
                 httpStatus: 400,
                 locator: locator,
                 internalMessage: "Handler dispatch failed; nested exception is java.lang.Error: Unresolved compilation problem: \n\tSyntax error, insert \";\" to complete ReturnStatement\n",

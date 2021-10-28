@@ -10,6 +10,7 @@ const csvParser = require("csv-parser");
 const multer = require("multer");
 const fs = require("fs");
 const Client = require('../models/Client');
+const { Parser } = require('json2csv');
 
 const removeDuplicates = (master, masterInMongo, throwErr) => {
     try {
@@ -18,7 +19,7 @@ const removeDuplicates = (master, masterInMongo, throwErr) => {
         for (var i = 0; i < master.length; i++) {
             // console.log(i, master[i]);
             //FOR STYLECODES
-            let obj = {}, errObj = {};
+            let obj = {};
             if (master[i].styleCode && !masterInMongo.find((ele) => { return ele.styleCode === master[i].styleCode })) {
                 obj = master[i];
             }
@@ -29,7 +30,7 @@ const removeDuplicates = (master, masterInMongo, throwErr) => {
                 obj = master[i];
             }
             else if (master[i].skuCode && throwErr)
-                error.push({ rowData: master[i], rowNum: i + 1 });
+                error.push({Source:"SKU Upload", Data: master[i], Row: i + 1, Error :"SKU Already Uploaded" });
 
             //FOR SIZECODES
             if (master[i].sizeCode && !masterInMongo.find((ele) => { return ele.sizeCode === master[i].sizeCode })) {
@@ -47,7 +48,7 @@ const removeDuplicates = (master, masterInMongo, throwErr) => {
         res.status(404).json({ message: err })
     }
 }
-
+//MULTER START
 const fileStorageEngine = multer.diskStorage({
     destination: (res, file, cb) => {
         cb(null, "./csvFiles");
@@ -58,6 +59,25 @@ const fileStorageEngine = multer.diskStorage({
 });
 
 const upload = multer({ storage: fileStorageEngine });
+//MULTER END
+
+const exportCsv = async (res, json) => {
+    const fields = ["Source", "Row", "Data", "Error"];
+    const opts = { fields };
+    try {
+        const parser = new Parser(opts);
+        const csv = parser.parse(json);
+        const destination = "csvFiles/SetUpError" + Date.now()+".csv";
+        fs.writeFile(destination, csv, function (err) {
+            if (err)
+                throw err;
+            res.set('Content-Type', 'application/csv');
+            res.download(destination); 
+        }); 
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 router.post('/setUp', upload.single("csvFile"), async (req, res) => {
     try {
@@ -71,6 +91,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
 
         //DELETING FOR TESTING
         // await SkuMaster.deleteMany({ clientId: clientId });
+        // await Style.deleteMany({ clientId: clientId });
         // res.send("OK Deleted SKUS");
 
         const error = [], styleCodes = [], sizeCodes = [], skuCodes = [], duplicateSku = [], results = [];
@@ -79,6 +100,7 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                 .pipe(csvParser({}))
                 .on("data", (data) => {
                     results.push(data);
+                    // const errorStatus = [];
                     let styleObj = {
                         clientId: clientId,
                         status: null,
@@ -86,10 +108,19 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                         frontImageUrl: data['Front Image Url']
                     }
 
-                    if (Object.keys(validateStyle(styleObj)).length)
-                        error.push({ rowNum: results.length, rowData: data, error: validateStyle(styleObj).error });
-                    else if (!styleCodes.find((ele) => { return ele.styleCode === styleObj.styleCode }))
+                    // if (Object.keys(validateStyle(styleObj)).length)
+                    //     {
+                    //         error.push({ Source: "SKU Upload",Row: results.length, Data: data, error: validateStyle(styleObj).error.errorCode });
+                    //         errorStatus.push(styleObj.styleCode);
+                    // }
+                    // if (Object.keys(validateStyle(styleObj)).length) {
+                    //     error.push({ Source: "SKU Upload", Row: results.length, Data: data, error: validateStyle(styleObj).error.errorCode });
+                    //     errorStatus.push(styleObj.styleCode);
+                    // }
+                    // else 
+                    if (!styleCodes.find((ele) => { return ele.styleCode === styleObj.styleCode }))
                         styleCodes.push(styleObj);
+
                     let skuObj = {
                         clientId: clientId,
                         styleCode: data["Style Code"],
@@ -99,19 +130,20 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                     }
 
                     if (Object.keys(validateSku(skuObj)).length)
-                        error.push({ rowNum: results.length, rowData: data, error: validateSku(skuObj).error });
+                        error.push({ Source: "SKU Upload", Row: results.length, Data: data, Error: validateSku(skuObj).error.errorCode });
                     else if (!skuCodes.find((ele) => { return ele.skuCode === skuObj.skuCode }))
                         skuCodes.push(skuObj);
-                    else duplicateSku.push({ rowNum: results.length, rowData: skuObj, error: "Duplicate Sku" });
+                    else error.push({ Source: "SKU Upload", Row: results.length, Data: skuObj, Error: "Duplicate Sku" });
 
                     let sizeObj = {
                         clientId: clientId,
                         sizeCode: data["Size"]
                     }
 
-                    if (Object.keys(validateSize(sizeObj)).length)
-                        error.push({ rowNum: results.length, rowData: data, error: validateSku(sizeObj).error });
-                    else if (!sizeCodes.find((ele) => { return ele.sizeCode === sizeObj.sizeCode }))
+                    // if (Object.keys(validateSize(sizeObj)).length)
+                    //     error.push({ rowNum: results.length, rowData: data, error: validateSku(sizeObj).error });
+                    // else 
+                    if (!sizeCodes.find((ele) => { return ele.sizeCode === sizeObj.sizeCode }))
                         sizeCodes.push(sizeObj);
                 })
                 .on("end", async () => {
@@ -144,8 +176,11 @@ router.post('/setUp', upload.single("csvFile"), async (req, res) => {
                             SkuCodes = [];
                             skuCodeInMongo = true;
                         }
+                        if(error.length){
+                            exportCsv(res, error);
+                        }
 
-                        res.json({
+                        else res.json({
                             data: {
                                 styleCodes: styles,
                                 skuCodes: skus,

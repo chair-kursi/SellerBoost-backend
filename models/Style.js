@@ -6,8 +6,7 @@ const styleSchema = mongoose.Schema({
     },
     styleCode: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     name: {
         type: String,
@@ -63,6 +62,8 @@ const styleSchema = mongoose.Schema({
         type: Date,
         default: Date.now()
     } 
-})
+});
+
+styleSchema.index({clientId: 1, styleCode: 1}, {unique: true});
 
 module.exports = mongoose.model("style", styleSchema);

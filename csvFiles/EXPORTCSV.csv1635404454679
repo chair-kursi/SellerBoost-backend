@@ -1,0 +1,4 @@
+"Source","Row","Data","Error"
+"SKU Upload",21,"{""SKU"":""JB-0000012-04-05Y"",""Barcode"":""A120405A"",""Style Code"":""||"",""Size"":""04-05Y""}","Invalid StyleCode, try again!!, "
+"SKU Upload",26,"{""SKU"":""JB-0000012-09-10Y"",""Barcode"":""A120910A"",""Style Code"":""JB-0000012"",""Size"":""!!""}","Invalid SizeCode, try again!!, "
+"SKU Upload",28,"{""SKU"":""*"",""Barcode"":""A130304A"",""Style Code"":""JB-0000013"",""Size"":""03-04Y""}","Invalid SizeCode, try again!!, "
