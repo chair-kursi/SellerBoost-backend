@@ -26,7 +26,7 @@ var StyleTraffic = require("../models/StyleTraffic");
 
 var SkuSales = require("../models/SkuSales");
 
-var SkuMaster = require('../models/SkuMaster');
+var SkuMaster = require("../models/SkuMaster");
 
 var Inventory = require("../models/Inventory");
 
@@ -41,7 +41,7 @@ var Style = require("../models/Style");
 
 var Summary = require("../models/Summary");
 
-var https = require('https');
+var https = require("https");
 
 var multer = require("multer");
 
@@ -50,7 +50,10 @@ var csvParser = require("csv-parser");
 var Client = require("../models/Client");
 
 var _require2 = require("express-validator"),
-    header = _require2.header; //DEFINING CONSTATNTS
+    header = _require2.header;
+
+var _require3 = require("../validators/basicValidations"),
+    isValidSkuCode = _require3.isValidSkuCode; //DEFINING CONSTATNTS
 
 
 var inventoryValues = ["", 0, 10, 15, 50, 80, 150, 200, 300]; //"" at index zero is for completing the table
@@ -293,7 +296,7 @@ var createSalesObj = function createSalesObj(clientId, data) {
 var checkForHeaders = function checkForHeaders(defaultHeaders, incomingHeaders) {
   if (defaultHeaders.length !== incomingHeaders.length) return {
     matched: false,
-    error: "Columns must be " + defaultHeaders.length + " in length"
+    error: "Columns must be of length " + defaultHeaders.length + " exactly."
   };
   var countOfHeaders = 0;
 
@@ -301,8 +304,8 @@ var checkForHeaders = function checkForHeaders(defaultHeaders, incomingHeaders) 
     for (var j = 0; j < incomingHeaders.length; j++) {
       if (defaultHeaders[i] === incomingHeaders[j]) {
         countOfHeaders += 1;
-        defaultHeaders[i] = '-1';
-        incomingHeaders[j] = '-2';
+        defaultHeaders[i] = "-1";
+        incomingHeaders[j] = "-2";
       }
     }
   }
@@ -310,16 +313,16 @@ var checkForHeaders = function checkForHeaders(defaultHeaders, incomingHeaders) 
   var unmatchedHeaders = [];
 
   for (var i = 0; i < incomingHeaders.length; i++) {
-    if (incomingHeaders[i] !== '-2') unmatchedHeaders.push(incomingHeaders[i]);
+    if (incomingHeaders[i] !== "-2") unmatchedHeaders.push(defaultHeaders[i]);
   }
 
   if (countOfHeaders === defaultHeaders.length) return {
     matched: true
-  };
-  console.log("unmatchedHeaders", unmatchedHeaders);
+  }; //   console.log("unmatchedHeaders", unmatchedHeaders);
+
   return {
     matched: false,
-    error: unmatchedHeaders.join(", ") + " didn't matched"
+    error: unmatchedHeaders.join(", ") + " didn't Found!!"
   };
 };
 
@@ -345,7 +348,7 @@ function createReadStream(destination) {
 }
 
 function readCsvOfSales(defaultSalesHeaders, destination, clientId) {
-  var readSales, err, results, headers, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _value, row, obj, checkHeaders;
+  var readSales, err, results, inValidSku, headers, rowNum, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _loop, _iterator, _step, _value, isValidSku, checkHeaders;
 
   return regeneratorRuntime.async(function readCsvOfSales$(_context2) {
     while (1) {
@@ -356,80 +359,99 @@ function readCsvOfSales(defaultSalesHeaders, destination, clientId) {
 
         case 2:
           readSales = _context2.sent;
-          err = [], results = [];
-          headers = [];
+          err = [], results = [], inValidSku = [];
+          headers = [], rowNum = 0;
           _iteratorNormalCompletion = true;
           _didIteratorError = false;
           _context2.prev = 7;
+
+          _loop = function _loop() {
+            var row = _value;
+            var obj = createSalesObj(clientId, row);
+            rowNum++;
+            isValidSku = isValidSkuCode(obj.skuCode);
+            if (!isValidSku.length && !results.find(function (element) {
+              return element.skuCode === obj.skuCode;
+            })) results.push(obj);else if (isValidSku.length) inValidSku.push({
+              Source: "Sales",
+              Row: rowNum,
+              Data: row,
+              Error: "Invalid Sku Found"
+            });else inValidSku.push({
+              Source: "Sales",
+              Row: rowNum,
+              Data: row,
+              Error: "Duplicate Sku Found"
+            });
+            if (!headers.length) headers = Object.keys(row);
+          };
+
           _iterator = _asyncIterator(readSales);
 
-        case 9:
-          _context2.next = 11;
+        case 10:
+          _context2.next = 12;
           return regeneratorRuntime.awrap(_iterator.next());
 
-        case 11:
+        case 12:
           _step = _context2.sent;
           _iteratorNormalCompletion = _step.done;
-          _context2.next = 15;
+          _context2.next = 16;
           return regeneratorRuntime.awrap(_step.value);
 
-        case 15:
+        case 16:
           _value = _context2.sent;
 
           if (_iteratorNormalCompletion) {
-            _context2.next = 24;
+            _context2.next = 22;
             break;
           }
 
-          row = _value;
-          obj = createSalesObj(clientId, row);
-          results.push(obj);
-          if (!headers.length) headers = Object.keys(row);
+          _loop();
 
-        case 21:
+        case 19:
           _iteratorNormalCompletion = true;
-          _context2.next = 9;
+          _context2.next = 10;
+          break;
+
+        case 22:
+          _context2.next = 28;
           break;
 
         case 24:
-          _context2.next = 30;
-          break;
-
-        case 26:
-          _context2.prev = 26;
+          _context2.prev = 24;
           _context2.t0 = _context2["catch"](7);
           _didIteratorError = true;
           _iteratorError = _context2.t0;
 
-        case 30:
-          _context2.prev = 30;
-          _context2.prev = 31;
+        case 28:
+          _context2.prev = 28;
+          _context2.prev = 29;
 
           if (!(!_iteratorNormalCompletion && _iterator["return"] != null)) {
-            _context2.next = 35;
+            _context2.next = 33;
             break;
           }
 
-          _context2.next = 35;
+          _context2.next = 33;
           return regeneratorRuntime.awrap(_iterator["return"]());
 
-        case 35:
-          _context2.prev = 35;
+        case 33:
+          _context2.prev = 33;
 
           if (!_didIteratorError) {
-            _context2.next = 38;
+            _context2.next = 36;
             break;
           }
 
           throw _iteratorError;
 
+        case 36:
+          return _context2.finish(33);
+
+        case 37:
+          return _context2.finish(28);
+
         case 38:
-          return _context2.finish(35);
-
-        case 39:
-          return _context2.finish(30);
-
-        case 40:
           checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
 
           if (!checkHeaders.matched) {
@@ -444,19 +466,20 @@ function readCsvOfSales(defaultSalesHeaders, destination, clientId) {
 
           return _context2.abrupt("return", {
             error: err,
-            result: results
+            result: results,
+            inValidSku: inValidSku
           });
 
-        case 43:
+        case 41:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[7, 26, 30, 40], [31,, 35, 39]]);
+  }, null, null, [[7, 24, 28, 38], [29,, 33, 37]]);
 }
 
 function readCsvOfInventory(defaultSalesHeaders, destination, clientId) {
-  var readSales, err, results, headers, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, _value2, row, obj, checkHeaders;
+  var readSales, err, results, inValidSku, headers, rowNum, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _loop2, _iterator2, _step2, _value2, isValidSku, checkHeaders;
 
   return regeneratorRuntime.async(function readCsvOfInventory$(_context3) {
     while (1) {
@@ -467,80 +490,99 @@ function readCsvOfInventory(defaultSalesHeaders, destination, clientId) {
 
         case 2:
           readSales = _context3.sent;
-          err = [], results = [];
-          headers = [];
+          err = [], results = [], inValidSku = [];
+          headers = [], rowNum = 0;
           _iteratorNormalCompletion2 = true;
           _didIteratorError2 = false;
           _context3.prev = 7;
+
+          _loop2 = function _loop2() {
+            var row = _value2;
+            var obj = createInventoryObj(clientId, row);
+            isValidSku = isValidSkuCode(obj.itemSkuCode);
+            rowNum++;
+            if (!isValidSku.length && !results.find(function (element) {
+              return element.itemSkuCode === obj.itemSkuCode;
+            })) results.push(obj);else if (isValidSku.length) inValidSku.push({
+              Source: "Inventory",
+              Row: rowNum,
+              Data: JSON.stringify(row),
+              Error: "Invalid Sku Found"
+            });else inValidSku.push({
+              Source: "Inventory",
+              Row: rowNum,
+              Data: JSON.stringify(row),
+              Error: "Duplicate Sku Found"
+            });
+            if (!headers.length) headers = Object.keys(row);
+          };
+
           _iterator2 = _asyncIterator(readSales);
 
-        case 9:
-          _context3.next = 11;
+        case 10:
+          _context3.next = 12;
           return regeneratorRuntime.awrap(_iterator2.next());
 
-        case 11:
+        case 12:
           _step2 = _context3.sent;
           _iteratorNormalCompletion2 = _step2.done;
-          _context3.next = 15;
+          _context3.next = 16;
           return regeneratorRuntime.awrap(_step2.value);
 
-        case 15:
+        case 16:
           _value2 = _context3.sent;
 
           if (_iteratorNormalCompletion2) {
-            _context3.next = 24;
+            _context3.next = 22;
             break;
           }
 
-          row = _value2;
-          obj = createInventoryObj(clientId, row);
-          if (!headers.length) headers = Object.keys(row);
-          results.push(obj);
+          _loop2();
 
-        case 21:
+        case 19:
           _iteratorNormalCompletion2 = true;
-          _context3.next = 9;
+          _context3.next = 10;
+          break;
+
+        case 22:
+          _context3.next = 28;
           break;
 
         case 24:
-          _context3.next = 30;
-          break;
-
-        case 26:
-          _context3.prev = 26;
+          _context3.prev = 24;
           _context3.t0 = _context3["catch"](7);
           _didIteratorError2 = true;
           _iteratorError2 = _context3.t0;
 
-        case 30:
-          _context3.prev = 30;
-          _context3.prev = 31;
+        case 28:
+          _context3.prev = 28;
+          _context3.prev = 29;
 
           if (!(!_iteratorNormalCompletion2 && _iterator2["return"] != null)) {
-            _context3.next = 35;
+            _context3.next = 33;
             break;
           }
 
-          _context3.next = 35;
+          _context3.next = 33;
           return regeneratorRuntime.awrap(_iterator2["return"]());
 
-        case 35:
-          _context3.prev = 35;
+        case 33:
+          _context3.prev = 33;
 
           if (!_didIteratorError2) {
-            _context3.next = 38;
+            _context3.next = 36;
             break;
           }
 
           throw _iteratorError2;
 
+        case 36:
+          return _context3.finish(33);
+
+        case 37:
+          return _context3.finish(28);
+
         case 38:
-          return _context3.finish(35);
-
-        case 39:
-          return _context3.finish(30);
-
-        case 40:
           checkHeaders = checkForHeaders(defaultSalesHeaders, headers);
 
           if (!checkHeaders.matched) {
@@ -555,25 +597,26 @@ function readCsvOfInventory(defaultSalesHeaders, destination, clientId) {
 
           return _context3.abrupt("return", {
             error: err,
-            result: results
+            result: results,
+            inValidSku: inValidSku
           });
 
-        case 43:
+        case 41:
         case "end":
           return _context3.stop();
       }
     }
-  }, null, null, [[7, 26, 30, 40], [31,, 35, 39]]);
+  }, null, null, [[7, 24, 28, 38], [29,, 33, 37]]);
 }
 
 router.post("/dashboardUploads", upload.fields([{
-  name: 'skuSales',
+  name: "skuSales",
   maxCount: 1
 }, {
-  name: 'skuInventory',
+  name: "skuInventory",
   maxCount: 1
 }]), function _callee3(req, res) {
-  var localId, client, clientId, error, err, resultsobj, OBJ, defaultSalesHeaders, defaultInventoryHeaders, file, results, headerErr, result, _results, download, _file, _results2, _headerErr, _result2, _results3;
+  var localId, client, clientId, duplicateSku, error, err, resultsobj, defaultSalesHeaders, defaultInventoryHeaders, file, _results, headerErr, _inValidSku, result, _results2, download, _file, _results3, _headerErr, _inValidSku2, _result2, _results4;
 
   return regeneratorRuntime.async(function _callee3$(_context6) {
     while (1) {
@@ -588,83 +631,86 @@ router.post("/dashboardUploads", upload.fields([{
 
         case 4:
           client = _context6.sent;
-          clientId = client.clientId; // TO DELETE THIS
+          clientId = client.clientId;
+          duplicateSku = []; // TO DELETE THIS
 
-          _context6.next = 8;
+          _context6.next = 9;
           return regeneratorRuntime.awrap(SkuSales.deleteMany({
             clientId: clientId
           }));
 
-        case 8:
-          _context6.next = 10;
+        case 9:
+          _context6.next = 11;
           return regeneratorRuntime.awrap(Inventory.deleteMany({
             clientId: clientId
           }));
 
-        case 10:
+        case 11:
           error = [];
           err = [];
           resultsobj = {};
-          defaultSalesHeaders = ['Sku Code', 'Name', 'Total Sales', 'Day Of Inventory', 'Inventory'];
-          defaultInventoryHeaders = ['Facility', 'Item Type Name', 'Item SkuCode', 'EAN', 'UPC', 'IJBN', 'Color', 'Size', 'Brand', 'Category Name', 'MRP', 'Open Sale', 'Inventory', 'Inventory Blocked', 'Bad Inventory', 'Putaway Pending', 'Pending Inventory Assessment', 'Stock In Transfer', 'Open Purchase', 'Enabled', 'Cost Price'];
+          defaultSalesHeaders = ["Sku Code", "Name", "Total Sales", "Day Of Inventory", "Inventory"];
+          defaultInventoryHeaders = ["Facility", "Item Type Name", "Item SkuCode", "EAN", "UPC", "ISBN", "Color", "Size", "Brand", "Category Name", "MRP", "Open Sale", "Inventory", "Inventory Blocked", "Bad Inventory", "Putaway Pending", "Pending Inventory Assessment", "Stock In Transfer", "Open Purchase", "Enabled", "Cost Price"];
 
           if (!(req.files && req.files.skuSales && req.files.skuSales.length && req.files.skuSales[0].path)) {
-            _context6.next = 36;
+            _context6.next = 39;
             break;
           }
 
-          _context6.prev = 16;
-          _context6.next = 19;
-          return regeneratorRuntime.awrap(readCsvOfSales(defaultSalesHeaders, req.files.skuSales[0].path, clientId).then(function (e) {
-            return e;
+          _context6.prev = 17;
+          _context6.next = 20;
+          return regeneratorRuntime.awrap(readCsvOfSales(defaultSalesHeaders, req.files.skuSales[0].path, clientId).then(function (convertedJson) {
+            return convertedJson;
           }));
 
-        case 19:
+        case 20:
           file = _context6.sent;
-          results = file.result;
+          _results = file.result;
           headerErr = file.error;
+          _inValidSku = file.inValidSku;
           err.push.apply(err, _toConsumableArray(headerErr));
+          duplicateSku.push.apply(duplicateSku, _toConsumableArray(_inValidSku));
 
           if (headerErr.length) {
-            _context6.next = 28;
+            _context6.next = 31;
             break;
           }
 
-          _context6.next = 26;
-          return regeneratorRuntime.awrap(SkuSales.insertMany(results));
+          _context6.next = 29;
+          return regeneratorRuntime.awrap(SkuSales.insertMany(_results));
 
-        case 26:
+        case 29:
           result = _context6.sent;
           resultsobj = _objectSpread({}, resultsobj, {
             skuSales: result
           });
 
-        case 28:
-          _context6.next = 34;
+        case 31:
+          _context6.next = 37;
           break;
 
-        case 30:
-          _context6.prev = 30;
-          _context6.t0 = _context6["catch"](16);
+        case 33:
+          _context6.prev = 33;
+          _context6.t0 = _context6["catch"](17);
           console.log("error", _context6.t0);
           error.push({
             message: _context6.t0
           });
 
-        case 34:
-          _context6.next = 37;
+        case 37:
+          _context6.next = 40;
           break;
 
-        case 36:
+        case 39:
           if (req.body.salesUrl) {
-            _results = [];
+            _results2 = [];
 
             download = function download(url, dest) {
               var file = fs.createWriteStream(dest);
               https.get(url, function (response) {
                 response.pipe(file);
-                file.on('finish', function () {
-                  fs.createReadStream(dest).pipe(csvParser({})).on('headers', function (headers) {
+                file.on("finish", function () {
+                  fs.createReadStream(dest).pipe(csvParser({})).on("headers", function (headers) {
                     if (!checkForHeaders(defaultSalesHeaders, headers)) res.json({
                       data: null,
                       error: "Headers didn't matched"
@@ -672,7 +718,7 @@ router.post("/dashboardUploads", upload.fields([{
                   }).on("data", function (data) {
                     var obj = createSalesObj(clientId, data);
 
-                    _results.push(obj);
+                    _results2.push(obj);
                   }).on("end", function _callee() {
                     var _result;
 
@@ -682,7 +728,7 @@ router.post("/dashboardUploads", upload.fields([{
                           case 0:
                             _context4.prev = 0;
                             _context4.next = 3;
-                            return regeneratorRuntime.awrap(SkuSales.insertMany(_results));
+                            return regeneratorRuntime.awrap(SkuSales.insertMany(_results2));
 
                           case 3:
                             _result = _context4.sent;
@@ -724,63 +770,65 @@ router.post("/dashboardUploads", upload.fields([{
             error: "Not Found"
           });
 
-        case 37:
+        case 40:
           if (!(req.files && req.files.skuInventory && req.files.skuInventory.length && req.files.skuInventory[0].path)) {
-            _context6.next = 57;
+            _context6.next = 62;
             break;
           }
 
-          _context6.prev = 38;
-          _context6.next = 41;
-          return regeneratorRuntime.awrap(readCsvOfInventory(defaultInventoryHeaders, req.files.skuInventory[0].path, clientId).then(function (e) {
-            return e;
+          _context6.prev = 41;
+          _context6.next = 44;
+          return regeneratorRuntime.awrap(readCsvOfInventory(defaultInventoryHeaders, req.files.skuInventory[0].path, clientId).then(function (convertedJson) {
+            return convertedJson;
           }));
 
-        case 41:
+        case 44:
           _file = _context6.sent;
-          _results2 = _file.result;
+          _results3 = _file.result;
           _headerErr = _file.error;
+          _inValidSku2 = _file.inValidSku;
           err.push.apply(err, _toConsumableArray(_headerErr));
+          duplicateSku.push.apply(duplicateSku, _toConsumableArray(_inValidSku2));
 
           if (_headerErr.length) {
-            _context6.next = 50;
+            _context6.next = 55;
             break;
           }
 
-          _context6.next = 48;
-          return regeneratorRuntime.awrap(Inventory.insertMany(_results2));
+          _context6.next = 53;
+          return regeneratorRuntime.awrap(Inventory.insertMany(_results3));
 
-        case 48:
+        case 53:
           _result2 = _context6.sent;
           resultsobj = _objectSpread({}, resultsobj, {
             inventory: _result2
           });
 
-        case 50:
-          _context6.next = 55;
+        case 55:
+          _context6.next = 60;
           break;
 
-        case 52:
-          _context6.prev = 52;
-          _context6.t1 = _context6["catch"](38);
+        case 57:
+          _context6.prev = 57;
+          _context6.t1 = _context6["catch"](41);
           res.json({
             message: _context6.t1
           });
 
-        case 55:
-          _context6.next = 58;
+        case 60:
+          _context6.next = 63;
           break;
 
-        case 57:
+        case 62:
           if (req.body.inventoryUrl) {
-            _results3 = [];
+            _results4 = [];
 
             download = function download(url, dest) {
               var file = fs.createWriteStream(dest);
               https.get(url, function (response) {
                 response.pipe(file);
-                file.on('finish', function () {
-                  fs.createReadStream(dest).pipe(csvParser({})).on('headers', function (headers) {
+                file.on("finish", function () {
+                  fs.createReadStream(dest).pipe(csvParser({})).on("headers", function (headers) {
                     if (!checkForHeaders(defaultInventoryHeaders, headers)) res.json({
                       data: null,
                       error: "Headers didn't matched"
@@ -788,7 +836,7 @@ router.post("/dashboardUploads", upload.fields([{
                   }).on("data", function (data) {
                     var obj = createInventoryObj(clientId, data);
 
-                    _results3.push(obj);
+                    _results4.push(obj);
                   }).on("end", function _callee2() {
                     var _result3;
 
@@ -798,7 +846,7 @@ router.post("/dashboardUploads", upload.fields([{
                           case 0:
                             _context5.prev = 0;
                             _context5.next = 3;
-                            return regeneratorRuntime.awrap(Inventory.insertMany(_results3));
+                            return regeneratorRuntime.awrap(Inventory.insertMany(_results4));
 
                           case 3:
                             _result3 = _context5.sent;
@@ -834,35 +882,98 @@ router.post("/dashboardUploads", upload.fields([{
             error: "Not Found"
           });
 
-        case 58:
+        case 63:
           // console.log("err", err);
           if (err.length) {
             exportCsv(res, err);
           } else {
-            styleTraffic(req, res, clientId, resultsobj).then(function (dashboard) {
-              res.json(dashboard);
+            if (duplicateSku.length) exportCsv(res, duplicateSku);
+            styleTraffic(clientId, resultsobj).then(function (dashboard) {// console.log(dashboard);
             });
           }
 
-          _context6.next = 64;
+          _context6.next = 69;
           break;
 
-        case 61:
-          _context6.prev = 61;
+        case 66:
+          _context6.prev = 66;
           _context6.t2 = _context6["catch"](0);
           res.status(400).json({
             message1: _context6.t2
           });
 
-        case 64:
+        case 69:
         case "end":
           return _context6.stop();
       }
     }
-  }, null, null, [[0, 61], [16, 30], [38, 52]]);
-});
+  }, null, null, [[0, 66], [17, 33], [41, 57]]);
+}); //FUNCTIONS FOR STYLETRAFFIC 
 
-var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
+var setSuggestedSmoothInv = function setSuggestedSmoothInv(suggestedInventoryX) {
+  if (suggestedInventoryX < 100) return Math.round(suggestedInventoryX / 10) * 10;else return Math.round(suggestedInventoryX / 100) * 100;
+};
+
+var setSuggestedInv = function setSuggestedInv(planDayX, TotalSales, inventory) {
+  if (planDayX / 30 * TotalSales - inventory > 0) return planDayX / 30 * TotalSales - inventory;else return 0;
+};
+
+var setDashboardObj = function setDashboardObj(clientId, styleCode, trafficActual, trafficVirtual, status, currentInv, salesNumber, salesRank, replenishmentRank) {
+  var obj = {
+    clientId: clientId,
+    styleCode: styleCode,
+    trafficActual: trafficActual,
+    trafficVirtual: trafficVirtual,
+    status: status,
+    currentInv: currentInv,
+    salesNumber: salesNumber,
+    salesRank: salesRank,
+    replenishmentRank: replenishmentRank
+  };
+  return obj;
+};
+
+var setSummaryObj = function setSummaryObj(summaryObj) {
+  var obj = {
+    soldout: summaryObj["SOLDOUT"] || 0,
+    red: summaryObj["RED"] || 0,
+    orange: summaryObj["ORANGE"] || 0,
+    green: summaryObj["GREEN"] || 0,
+    overgreen: summaryObj["OVERGREEN"] || 0,
+    updated: Date.now()
+  };
+  return obj;
+};
+
+var getItemMasterObj = function getItemMasterObj(clientId, skuCode, styleCode, sizeCode, TotalSales, DayOfInventory, inventory, dayInventory, trafficColor, trafficShortCode, skuTrafficCode, suggestedInventory1, suggestedSmoothInventory1, suggestedInventory2, suggestedSmoothInventory2, suggestedInventory3, suggestedSmoothInventory3) {
+  var itemMasterObj = {
+    clientId: clientId,
+    skuCode: skuCode,
+    styleCode: styleCode,
+    sizeCode: sizeCode,
+    totalSales: TotalSales,
+    dayOfInventory: DayOfInventory,
+    inventory: inventory,
+    inventoryVirtual: inventory,
+    dayInventory: dayInventory,
+    dayInventoryVirtual: dayInventory,
+    trafficColor: trafficColor,
+    trafficShortCode: trafficShortCode,
+    trafficShortCodeVirtual: trafficShortCode,
+    skuTrafficCode: skuTrafficCode,
+    skuTrafficCodeVirtual: skuTrafficCode,
+    suggestedInventory1: suggestedInventory1,
+    suggestedSmoothInventory1: suggestedSmoothInventory1,
+    suggestedInventory2: suggestedInventory2,
+    suggestedSmoothInventory2: suggestedSmoothInventory2,
+    suggestedInventory3: suggestedInventory3,
+    suggestedSmoothInventory3: suggestedSmoothInventory3
+  };
+  console.log(itemMasterObj.suggestedInventory1, itemMasterObj.suggestedInventory2);
+  return itemMasterObj;
+};
+
+var styleTraffic = function styleTraffic(clientId, resultsobj) {
   var i, itemMaster, _ret;
 
   return regeneratorRuntime.async(function styleTraffic$(_context8) {
@@ -872,7 +983,7 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
           _context8.prev = 0;
           _context8.next = 3;
           return regeneratorRuntime.awrap(function _callee4() {
-            var allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, skuData, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, statusArr, summaryObj, _loop, _i2, summary, dashboard, summaryRes;
+            var allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, itemMasterObj, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, statusArr, summaryObj, _loop3, _i2, summary, dashboard, summaryRes;
 
             return regeneratorRuntime.async(function _callee4$(_context7) {
               while (1) {
@@ -956,42 +1067,12 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
                       trafficShortCode = getTrafficShortCode(_trafficColor);
                       skuTrafficCode = trafficShortCode + "_" + dayInventory + "D_" + inventory + "C_" + TotalSales + "S#";
                       planDay1 = 30, planDay2 = 60, planDay3 = 90;
-                      suggestedInventory1 = planDay1 / 30 * TotalSales - inventory > 0 ? planDay1 / 30 * TotalSales - inventory : 0; //suggestedInventory1 = (planDay1 / 30) * TotalSales - inventory
-
-                      suggestedInventory2 = planDay2 / 30 * TotalSales - inventory > 0 ? planDay2 / 30 * TotalSales - inventory : 0; //suggestedInventory2 = (planDay2 / 30) * TotalSales - inventory
-
-                      suggestedInventory3 = planDay3 / 30 * TotalSales - inventory > 0 ? planDay3 / 30 * TotalSales - inventory : 0; //suggestedInventory3 = (planDay3 / 30) * TotalSales - inventory
-
-                      suggestedSmoothInventory1 = void 0, suggestedSmoothInventory2 = void 0, suggestedSmoothInventory3 = void 0;
-                      if (suggestedInventory1 < 100) suggestedSmoothInventory1 = Math.round(suggestedInventory1 / 10) * 10;else suggestedSmoothInventory1 = Math.round(suggestedInventory1 / 100) * 100;
-                      if (suggestedInventory2 < 100) suggestedSmoothInventory2 = Math.round(suggestedInventory2 / 10) * 10;else suggestedSmoothInventory2 = Math.round(suggestedInventory2 / 100) * 100;
-                      if (suggestedInventory3 < 100) suggestedSmoothInventory3 = Math.round(suggestedInventory3 / 10) * 10;else suggestedSmoothInventory3 = Math.round(suggestedInventory3 / 100) * 100; //MAPPING STYLECODES WITH TRAFFIC COLOR ----START
+                      suggestedInventory1 = setSuggestedInv(planDay1, TotalSales, inventory), suggestedInventory2 = setSuggestedInv(planDay2, TotalSales, inventory), suggestedInventory3 = setSuggestedInv(planDay3, TotalSales, inventory);
+                      suggestedSmoothInventory1 = setSuggestedSmoothInv(suggestedInventory1), suggestedSmoothInventory2 = setSuggestedSmoothInv(suggestedInventory2), suggestedSmoothInventory3 = setSuggestedSmoothInv(suggestedInventory3); //MAPPING STYLECODES WITH TRAFFIC COLOR ----START
 
                       trafficColorCountUsingStyleCode(styleCode, _trafficColor);
-                      skuData = {
-                        clientId: clientId,
-                        skuCode: skuCode,
-                        styleCode: styleCode,
-                        sizeCode: sizeCode,
-                        totalSales: TotalSales,
-                        dayOfInventory: DayOfInventory,
-                        inventory: inventory,
-                        inventoryVirtual: inventory,
-                        dayInventory: dayInventory,
-                        dayInventoryVirtual: dayInventory,
-                        trafficColor: _trafficColor,
-                        trafficShortCode: trafficShortCode,
-                        trafficShortCodeVirtual: trafficShortCode,
-                        skuTrafficCode: skuTrafficCode,
-                        skuTrafficCodeVirtual: skuTrafficCode,
-                        suggestedInventory1: suggestedInventory1,
-                        suggestedSmoothInventory1: suggestedSmoothInventory1,
-                        suggestedInventory2: suggestedInventory2,
-                        suggestedSmoothInventory2: suggestedSmoothInventory2,
-                        suggestedInventory3: suggestedInventory3,
-                        suggestedSmoothInventory3: suggestedSmoothInventory3
-                      };
-                      itemMaster.push(skuData);
+                      itemMasterObj = getItemMasterObj(clientId, skuCode, styleCode, sizeCode, TotalSales, DayOfInventory, inventory, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, suggestedInventory1, suggestedSmoothInventory1, suggestedInventory2, suggestedSmoothInventory2, suggestedInventory3, suggestedSmoothInventory3);
+                      itemMaster.push(itemMasterObj);
                     }
 
                     _context7.next = 25;
@@ -999,7 +1080,7 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
 
                   case 25:
                     Item = _context7.sent;
-                    //SETTING TRAFFIC COLORS COUNT 
+                    //SETTING TRAFFIC COLORS COUNT
                     colorCount = setColorCount();
                     colorScore = setColorScore(colorCount);
                     colorProduct = setColorProduct(totalSalesOfStylecode, colorScore);
@@ -1010,7 +1091,7 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
                     statusArr = ["Launching", "Live", "Disabled"];
                     summaryObj = {};
 
-                    _loop = function _loop(_i2) {
+                    _loop3 = function _loop3(_i2) {
                       var styleCode = styleCodeArr[_i2],
                           currentInv = totalInventoryOfStylecode.get(styleCode),
                           salesNumber = totalSalesOfStylecode.get(styleCode),
@@ -1022,17 +1103,7 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
                         status = statusArr[Math.floor(Math.random() * 3)];
                       }
 
-                      var obj = {
-                        clientId: clientId,
-                        styleCode: styleCode,
-                        trafficActual: trafficColor.get(styleCode),
-                        trafficVirtual: trafficColor.get(styleCode),
-                        status: status,
-                        currentInv: currentInv,
-                        salesNumber: salesNumber,
-                        salesRank: salesRank.get(styleCode),
-                        replenishmentRank: replenishmentRank.get(styleCode)
-                      };
+                      var obj = setDashboardObj(clientId, styleCode, trafficColor.get(styleCode), trafficColor.get(styleCode), status, currentInv, salesNumber, salesRank.get(styleCode), replenishmentRank.get(styleCode));
                       if (!summaryObj[obj.trafficActual]) summaryObj[obj.trafficActual] = 0;
                       summaryObj[obj.trafficActual] += 1; //CHECK WHY IT'S NOT WORKING
                       // console.log(obj);
@@ -1041,20 +1112,13 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
                     };
 
                     for (_i2 = 0; _i2 < styleCodeArr.length; _i2++) {
-                      _loop(_i2);
+                      _loop3(_i2);
                     }
 
                     finalArray.sort(function (a, b) {
                       return a.salesRank - b.salesRank;
                     });
-                    summary = {
-                      soldout: summaryObj["SOLDOUT"] || 0,
-                      red: summaryObj["RED"] || 0,
-                      orange: summaryObj["ORANGE"] || 0,
-                      green: summaryObj["GREEN"] || 0,
-                      overgreen: summaryObj["OVERGREEN"] || 0,
-                      updated: Date.now()
-                    };
+                    summary = setSummaryObj(summaryObj);
                     _context7.next = 41;
                     return regeneratorRuntime.awrap(StyleTraffic.insertMany(finalArray));
 
@@ -1105,8 +1169,8 @@ var styleTraffic = function styleTraffic(req, res, clientId, resultsobj) {
         case 8:
           _context8.prev = 8;
           _context8.t0 = _context8["catch"](0);
-          res.status(400).json({
-            message: _context8.t0
+          console.log({
+            errorMessage: _context8.t0
           });
 
         case 11:
@@ -1125,9 +1189,7 @@ router.get("/styleTraffic", function _callee5(req, res) {
       switch (_context9.prev = _context9.next) {
         case 0:
           _context9.prev = 0;
-          localId = req.cookies.LocalId; // if(!localId)
-          // localId="6N9yuxkxf6MhmSdOZuvAuze3l943"; 
-
+          localId = req.cookies.LocalId;
           _context9.next = 4;
           return regeneratorRuntime.awrap(Client.findOne({
             password: localId
@@ -1167,7 +1229,6 @@ router.get("/styleTraffic", function _callee5(req, res) {
 });
 
 var exportCsv = function exportCsv(res, json) {
-  console.log("json", json);
   var fields = ["Source", "Row", "Data", "Error"];
   var opts = {
     fields: fields
@@ -1179,7 +1240,7 @@ var exportCsv = function exportCsv(res, json) {
     var destination = "csvFiles/Sales&InventoryError" + Date.now() + ".csv";
     fs.writeFile(destination, csv, function (err) {
       if (err) throw err;
-      res.set('Content-Type', 'application/csv');
+      res.set("Content-Type", "application/csv");
       res.download(destination);
     });
   } catch (err) {

@@ -1,66 +1,68 @@
+const { isValidSkuCode, isValidStyleCode, isValidSizeCode } = require("./basicValidations");
+
 validateSku = function (skuObj) {
 
-    const validateSkuCode = (code) => {
-        if (!code)
-            return "Invalid StyleCode, StyleCode cannot be EMPTY.";
+    // const validateSkuCode = (code) => {
+    //     if (!code)
+    //         return "Invalid SKU code, SKU code cannot be EMPTY.";
 
-        if (code.length > 20 || code.length < 3)
-            return "Invalid SizeCode, try again!!";
-        for (let i = 0; i < code.length; i++) {
-            var c = code.charCodeAt(i);
-            if (!(c > 47 && c < 58) &&
-                !(c > 64 && c < 91) &&
-                code[i] !== '-' &&
-                code[i] !== ' ' &&
-                code[i] !== ':') {
-                return "Invalid SizeCode, try again!!";
-            }
-        }
-        return "";
-    }
+    //     if (code.length > 20 || code.length < 3)
+    //         return "Invalid SizeCode, try again!!";
+    //     for (let i = 0; i < code.length; i++) {
+    //         var c = code.charCodeAt(i);
+    //         if (!(c > 47 && c < 58) &&
+    //             !(c > 64 && c < 91) &&
+    //             code[i] !== '-' &&
+    //             code[i] !== ' ' &&
+    //             code[i] !== ':') {
+    //             return "Invalid SKU code, try again!!";
+    //         }
+    //     }
+    //     return "";
+    // }
 
-    const validateStyleCode = (code) => {
-        if (!code)
-            return "Invalid StyleCode, StyleCode cannot be EMPTY.";
+    // const validateStyleCode = (code) => {
+    //     if (!code)
+    //         return "Invalid Style Code, Style Code cannot be EMPTY.";
 
-        if (code.length > 20 || code.length < 3)
-            return "Invalid StyleCode, try again!!";
-        for (let i = 0; i < code.length; i++) {
-            var c = code.charCodeAt(i);
-            if (!(c > 47 && c < 58) &&
-                !(c > 64 && c < 91) &&
-                code[i] !== '-' &&
-                code[i] !== ' ' &&
-                code[i] !== ':') {
-                return "Invalid StyleCode, try again!!";
-            }
-        }
-        return "";
-    }
+    //     if (code.length > 20 || code.length < 3)
+    //         return "Invalid StyleCode, try again!!";
+    //     for (let i = 0; i < code.length; i++) {
+    //         var c = code.charCodeAt(i);
+    //         if (!(c > 47 && c < 58) &&
+    //             !(c > 64 && c < 91) &&
+    //             code[i] !== '-' &&
+    //             code[i] !== ' ' &&
+    //             code[i] !== ':') {
+    //             return "Invalid Style Code, try again!!";
+    //         }
+    //     }
+    //     return "";
+    // }
 
-    const validateSizeCode = (code) => {
-        if (!code)
-            return "Invalid SizeCode, it can't be EMPTY!!";
+    // const validateSizeCode = (code) => {
+    //     if (!code)
+    //         return "Invalid Size Code, it can't be EMPTY!!";
 
-        if (code.length > 20 || code.length < 3)
-            return "Invalid SizeCode, try again!!";
-        for (let i = 0; i < code.length; i++) {
-            var c = code.charCodeAt(i);
-            if (!(c > 47 && c < 58) &&
-                !(c > 64 && c < 91) &&
-                code[i] !== '-' &&
-                code[i] !== ' ' &&
-                code[i] !== ':') {
-                return "Invalid SizeCode, try again!!";
-            }
-        }
-        return "";
-    }
+    //     if (code.length > 20 || code.length < 3)
+    //         return "Invalid Size Code, try again!!";
+    //     for (let i = 0; i < code.length; i++) {
+    //         var c = code.charCodeAt(i);
+    //         if (!(c > 47 && c < 58) &&
+    //             !(c > 64 && c < 91) &&
+    //             code[i] !== '-' &&
+    //             code[i] !== ' ' &&
+    //             code[i] !== ':') {
+    //             return "Invalid Size Code, try again!!";
+    //         }
+    //     }
+    //     return "";
+    // }
 
     var locator = [];
-    const skuCodeErr = validateSkuCode(skuObj.skuCode);
-    const styleCodeErr = validateStyleCode(skuObj.styleCode);
-    const sizeCodeErr = validateSizeCode(skuObj.sizeCode);
+    const skuCodeErr = isValidSkuCode(skuObj.skuCode);
+    const styleCodeErr = isValidStyleCode(skuObj.styleCode);
+    const sizeCodeErr = isValidSizeCode(skuObj.sizeCode);
     if (skuObj.skuCode && skuCodeErr.length)
         locator = [...locator, {
             id: "skuCode",
