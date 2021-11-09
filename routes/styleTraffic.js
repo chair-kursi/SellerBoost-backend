@@ -548,14 +548,16 @@ router.post(
                     const results = file.result;
                     const headerErr = file.error;
                     const inValidSku = file.inValidSku;
+
                     err.push(...headerErr);
                     duplicateSku.push(...inValidSku);
+
                     if (!headerErr.length) {
                         const result = await Inventory.insertMany(results);
                         resultsobj = { ...resultsobj, inventory: result };
                     }
                 } catch (err) {
-                    res.json({ message: err });
+                    console.log({ message: err });
                 }
             } else if (req.body.inventoryUrl) {
                 const results = [];
@@ -675,7 +677,6 @@ const getItemMasterObj = (clientId, skuCode, styleCode, sizeCode, TotalSales, Da
         suggestedInventory3: suggestedInventory3,
         suggestedSmoothInventory3: suggestedSmoothInventory3,
     };
-    console.log(itemMasterObj.suggestedInventory1, itemMasterObj.suggestedInventory2);
     return itemMasterObj;
 }
 
@@ -774,7 +775,6 @@ const styleTraffic = async (clientId, resultsobj) => {
         const salesRank = setSalesRank(totalSalesOfStylecode);
         const trafficColor = setTrafficColor(colorCount);
         const finalArray = [];
-        const statusArr = ["Launching", "Live", "Disabled"];
         let summaryObj = {};
         for (let i = 0; i < styleCodeArr.length; i++) {
             let styleCode = styleCodeArr[i],
@@ -783,7 +783,7 @@ const styleTraffic = async (clientId, resultsobj) => {
                 status = styleMaster.find((ele) => ele.styleCode === styleCode).status;
 
             if (status === null) {
-                status = statusArr[Math.floor(Math.random() * 3)];
+                status = "Live";
             }
             const obj = setDashboardObj(clientId, styleCode, trafficColor.get(styleCode), trafficColor.get(styleCode), status, currentInv, salesNumber, salesRank.get(styleCode), replenishmentRank.get(styleCode))
 
@@ -815,17 +815,52 @@ const styleTraffic = async (clientId, resultsobj) => {
 };
 
 router.get("/styleTraffic", async (req, res) => {
-    try {
-        var localId = req.cookies.LocalId;
-        const client = await Client.findOne({ password: localId });
-        const clientId = client.clientId;
 
-        const dashBoard = await StyleTraffic.find({ clientId: clientId });
-        res.json({ data: dashBoard, error: null });
-    } catch (err) {
-        res.json({ data: null, error: err });
-    }
+    const sessionCookie = req.cookies.session || "";
+    admin
+        .auth()
+        .verifySessionCookie(sessionCookie, true /** checkRevoked */)
+        .then(async (userData) => {
+            console.log("Logged in:", userData.email)
+            try {
+                var localId = req.cookies.LocalId;
+                const client = await Client.findOne({ password: localId });
+                const clientId = client.clientId;
+
+                const dashBoard = await StyleTraffic.find({ clientId: clientId });
+                res.json({ data: dashBoard, error: null });
+            } catch (err) {
+                res.json({ data: null, error: err });
+            }
+        })
+        .catch((error) => {
+            res.redirect("/signin");
+        });
+
 });
+
+
+
+router.patch("/styleTraffic", async (req, res) => {
+    var responseStatus = "NA";
+    const date = new Date(req.body.date);
+    const today = new Date();
+    const status = req.body.status;
+    if (status === "Completed")
+        responseStatus = "Completed";
+    else if (date !== null) {
+        if (date > today)
+            responseStatus = "In Progress";
+        else
+            responseStatus = "Expired";
+    }
+
+    res.json({
+        responseStatus: responseStatus
+    })
+
+})
+
 
 const exportCsv = (res, json) => {
 

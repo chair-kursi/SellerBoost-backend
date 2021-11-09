@@ -1,9 +1,19 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const csrf = require("csurf");
+const admin = require("firebase-admin"); 
+
+const serviceAccount = require("./serviceAccountKey.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  // databaseURL: "https://server-auth-41acc.firebaseio.com",
+});
+
 dotenv.config({ path: __dirname + '/.env' });
 
+const csrfMiddleware = csrf({ cookie: true });
 const cookiesParser = require('cookie-parser');
 
 // require("dotenv/config");
@@ -41,6 +51,7 @@ const cluster = require("cluster");
 //   })
 // }
 
+
 //IMPORTING ROUTES
 const styleRouter = require("./routes/styles");
 const globalSizeRouter = require("./routes/globalSizes");
@@ -66,6 +77,12 @@ app.use(cors({ credentials: true, allowedHeaders:['Origin', 'X-Requested0-With',
 }));
 app.use(express.json());
 app.use(cookiesParser());
+app.use(csrfMiddleware);
+
+app.all("*", (req, res, next) => {
+  res.cookie("XSRF-TOKEN", req.csrfToken());
+  next();
+});
 
 //USING ROUTES AS A MIDDLEWARE
 app.use("/style", styleRouter);
@@ -88,6 +105,33 @@ app.use("/", summaryRouter);
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
 }
+
+app.post("/sessionLogin", (req, res) => {
+  const idToken = req.body.idToken.toString();
+
+  const expiresIn = 60 * 60 * 24 * 7 * 1000;//7 days
+
+  admin
+    .auth()
+    .createSessionCookie(idToken, { expiresIn })
+    .then(
+      (sessionCookie) => {
+        const options = { maxAge: expiresIn, httpOnly: true };
+        res.cookie("session", sessionCookie, options);
+        res.end(JSON.stringify({ status: "success" }));
+      },
+      (error) => {
+        res.status(401).send("UNAUTHORIZED REQUEST!");
+      }
+    );
+});
+
+
+app.get("/sessionLogout", (req, res) => {
+  res.clearCookie("session");
+  res.redirect("/login");
+});
+
 
 //CONNECT TO DB
 mongoose
