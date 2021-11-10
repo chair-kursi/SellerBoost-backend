@@ -39,7 +39,7 @@ var StyleTrafficSchema = mongoose.Schema({
 
   },
   planDate: {
-    type: Date,
+    type: String,
     "default": Date.now()
   },
   planStatus: {

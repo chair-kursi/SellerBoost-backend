@@ -872,12 +872,14 @@ router.patch("/styleTraffic", async (req, res) => {
         else
             responseStatus = "Expired";
     }
-
+    // const findOne
+    var updatedStyle;
     try {
-        const updateStyle = await StyleTraffic.updateOne(
+        await StyleTraffic.updateOne(
             { clientId: clientId, styleCode: styleCode },
             { planStatus: responseStatus, planDate: date }
         );
+        updatedStyle = await StyleTraffic.findOne({clientId: clientId, styleCode: styleCode});
     }
     catch (err) {
         console.log("ERROR Updating StyleTraffic. Error: " + err);
@@ -885,8 +887,8 @@ router.patch("/styleTraffic", async (req, res) => {
     }
 
     res.json({
-        responseStatus: responseStatus,
-        error: err
+        data: updatedStyle,
+        error: error
     })
 
 })

@@ -37,7 +37,7 @@ const StyleTrafficSchema = mongoose.Schema({
         // required: true,
     },
     planDate:{
-        type: Date,
+        type: String,
         default: Date.now()
     },
     planStatus:{

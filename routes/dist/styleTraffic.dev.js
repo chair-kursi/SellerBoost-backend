@@ -1254,7 +1254,7 @@ router.get("/styleTraffic", function _callee5(req, res) {
   }, null, null, [[0, 12]]);
 });
 router.patch("/styleTraffic", function _callee6(req, res) {
-  var localId, client, clientId, styleCode, responseStatus, error, date, today, status, updateStyle;
+  var localId, client, clientId, styleCode, responseStatus, error, date, today, status, updatedStyle;
   return regeneratorRuntime.async(function _callee6$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
@@ -1275,7 +1275,8 @@ router.patch("/styleTraffic", function _callee6(req, res) {
           status = req.body.status;
           if (status === "Completed") responseStatus = "Completed";else if (date !== null) {
             if (date > today) responseStatus = "In Progress";else responseStatus = "Expired";
-          }
+          } // const findOne
+
           _context10.prev = 11;
           _context10.next = 14;
           return regeneratorRuntime.awrap(StyleTraffic.updateOne({
@@ -1287,28 +1288,35 @@ router.patch("/styleTraffic", function _callee6(req, res) {
           }));
 
         case 14:
-          updateStyle = _context10.sent;
-          _context10.next = 21;
+          _context10.next = 16;
+          return regeneratorRuntime.awrap(StyleTraffic.findOne({
+            clientId: clientId,
+            styleCode: styleCode
+          }));
+
+        case 16:
+          updatedStyle = _context10.sent;
+          _context10.next = 23;
           break;
 
-        case 17:
-          _context10.prev = 17;
+        case 19:
+          _context10.prev = 19;
           _context10.t0 = _context10["catch"](11);
           console.log("ERROR Updating StyleTraffic. Error: " + _context10.t0);
           error = "ERROR Updating StyleTraffic. Error: " + _context10.t0;
 
-        case 21:
+        case 23:
           res.json({
-            responseStatus: responseStatus,
-            error: err
+            data: updatedStyle,
+            error: error
           });
 
-        case 22:
+        case 24:
         case "end":
           return _context10.stop();
       }
     }
-  }, null, null, [[11, 17]]);
+  }, null, null, [[11, 19]]);
 });
 
 var exportCsv = function exportCsv(res, json) {
