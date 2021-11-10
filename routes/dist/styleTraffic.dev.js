@@ -973,7 +973,7 @@ var getItemMasterObj = function getItemMasterObj(clientId, skuCode, styleCode, s
 };
 
 var styleTraffic = function styleTraffic(clientId, resultsobj) {
-  var i, itemMaster, _ret;
+  var i, itemMaster, summaryRes, _ret;
 
   return regeneratorRuntime.async(function styleTraffic$(_context8) {
     while (1) {
@@ -982,7 +982,7 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
           _context8.prev = 0;
           _context8.next = 3;
           return regeneratorRuntime.awrap(function _callee4() {
-            var allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, itemMasterObj, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, summaryObj, _loop3, _i2, summary, dashboard, summaryRes;
+            var allSkus, allSkuSales, allSkuInventory, styleMaster, skuSalesMap, skuInvMap, skuSalesData, skuInventoryData, totalInventoryOfStylecode, totalSalesOfStylecode, _i, _skuSalesData, _skuInventoryData, TotalSales, DayOfInventory, inventory, styleCode, skuCode, sizeCode, prevInventory, prevSales, dayInventory, _trafficColor, trafficShortCode, skuTrafficCode, planDay1, planDay2, planDay3, suggestedInventory1, suggestedInventory2, suggestedInventory3, suggestedSmoothInventory1, suggestedSmoothInventory2, suggestedSmoothInventory3, itemMasterObj, Item, colorCount, colorScore, colorProduct, replenishmentRank, salesRank, trafficColor, finalArray, summaryObj, _loop3, _i2, summary, dashboard, findSummaryOfClient, newSummary;
 
             return regeneratorRuntime.async(function _callee4$(_context7) {
               while (1) {
@@ -1123,6 +1123,19 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
                   case 40:
                     dashboard = _context7.sent;
                     _context7.next = 43;
+                    return regeneratorRuntime.awrap(Summary.findOne({
+                      clientId: clientId
+                    }));
+
+                  case 43:
+                    findSummaryOfClient = _context7.sent;
+
+                    if (!findSummaryOfClient) {
+                      _context7.next = 50;
+                      break;
+                    }
+
+                    _context7.next = 47;
                     return regeneratorRuntime.awrap(Summary.updateOne({
                       clientId: clientId
                     }, {
@@ -1131,8 +1144,23 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
                       "new": true
                     }));
 
-                  case 43:
+                  case 47:
                     summaryRes = _context7.sent;
+                    _context7.next = 54;
+                    break;
+
+                  case 50:
+                    newSummary = new Summary({
+                      clientId: clientId,
+                      dashboard: summary
+                    });
+                    _context7.next = 53;
+                    return regeneratorRuntime.awrap(newSummary.save());
+
+                  case 53:
+                    summaryRes = _context7.sent;
+
+                  case 54:
                     return _context7.abrupt("return", {
                       v: {
                         data: dashboard,
@@ -1142,7 +1170,7 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
                       }
                     });
 
-                  case 45:
+                  case 55:
                   case "end":
                     return _context7.stop();
                 }
@@ -1179,95 +1207,108 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
   }, null, null, [[0, 8]]);
 };
 
-router.get("/styleTraffic", function _callee6(req, res) {
-  var sessionCookie;
+router.get("/styleTraffic", function _callee5(req, res) {
+  var localId, client, _clientId, dashBoard;
+
+  return regeneratorRuntime.async(function _callee5$(_context9) {
+    while (1) {
+      switch (_context9.prev = _context9.next) {
+        case 0:
+          _context9.prev = 0;
+          localId = req.cookies.LocalId;
+          _context9.next = 4;
+          return regeneratorRuntime.awrap(Client.findOne({
+            password: localId
+          }));
+
+        case 4:
+          client = _context9.sent;
+          _clientId = client.clientId;
+          _context9.next = 8;
+          return regeneratorRuntime.awrap(StyleTraffic.find({
+            clientId: _clientId
+          }));
+
+        case 8:
+          dashBoard = _context9.sent;
+          res.json({
+            data: dashBoard,
+            error: null
+          });
+          _context9.next = 15;
+          break;
+
+        case 12:
+          _context9.prev = 12;
+          _context9.t0 = _context9["catch"](0);
+          res.json({
+            data: null,
+            error: _context9.t0
+          });
+
+        case 15:
+        case "end":
+          return _context9.stop();
+      }
+    }
+  }, null, null, [[0, 12]]);
+});
+router.patch("/styleTraffic", function _callee6(req, res) {
+  var localId, client, clientId, styleCode, responseStatus, error, date, today, status, updateStyle;
   return regeneratorRuntime.async(function _callee6$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
-          sessionCookie = req.cookies.session || "";
-          admin.auth().verifySessionCookie(sessionCookie, true
-          /** checkRevoked */
-          ).then(function _callee5(userData) {
-            var localId, client, _clientId, dashBoard;
+          localId = req.cookies.LocalId;
+          _context10.next = 3;
+          return regeneratorRuntime.awrap(Client.findOne({
+            password: localId
+          }));
 
-            return regeneratorRuntime.async(function _callee5$(_context9) {
-              while (1) {
-                switch (_context9.prev = _context9.next) {
-                  case 0:
-                    console.log("Logged in:", userData.email);
-                    _context9.prev = 1;
-                    localId = req.cookies.LocalId;
-                    _context9.next = 5;
-                    return regeneratorRuntime.awrap(Client.findOne({
-                      password: localId
-                    }));
-
-                  case 5:
-                    client = _context9.sent;
-                    _clientId = client.clientId;
-                    _context9.next = 9;
-                    return regeneratorRuntime.awrap(StyleTraffic.find({
-                      clientId: _clientId
-                    }));
-
-                  case 9:
-                    dashBoard = _context9.sent;
-                    res.json({
-                      data: dashBoard,
-                      error: null
-                    });
-                    _context9.next = 16;
-                    break;
-
-                  case 13:
-                    _context9.prev = 13;
-                    _context9.t0 = _context9["catch"](1);
-                    res.json({
-                      data: null,
-                      error: _context9.t0
-                    });
-
-                  case 16:
-                  case "end":
-                    return _context9.stop();
-                }
-              }
-            }, null, null, [[1, 13]]);
-          })["catch"](function (error) {
-            res.redirect("/signin");
-          });
-
-        case 2:
-        case "end":
-          return _context10.stop();
-      }
-    }
-  });
-});
-router.patch("/styleTraffic", function _callee7(req, res) {
-  var responseStatus, date, today, status;
-  return regeneratorRuntime.async(function _callee7$(_context11) {
-    while (1) {
-      switch (_context11.prev = _context11.next) {
-        case 0:
-          responseStatus = "NA";
-          date = new Date(req.body.date);
-          today = new Date();
+        case 3:
+          client = _context10.sent;
+          clientId = client.clientId;
+          styleCode = req.body.styleCode;
+          responseStatus = "NA", error = null;
+          date = new Date(req.body.date).toLocaleDateString();
+          today = new Date().toLocaleDateString();
           status = req.body.status;
           if (status === "Completed") responseStatus = "Completed";else if (date !== null) {
             if (date > today) responseStatus = "In Progress";else responseStatus = "Expired";
           }
+          _context10.prev = 11;
+          _context10.next = 14;
+          return regeneratorRuntime.awrap(StyleTraffic.updateOne({
+            clientId: clientId,
+            styleCode: styleCode
+          }, {
+            planStatus: responseStatus,
+            planDate: date
+          }));
+
+        case 14:
+          updateStyle = _context10.sent;
+          _context10.next = 21;
+          break;
+
+        case 17:
+          _context10.prev = 17;
+          _context10.t0 = _context10["catch"](11);
+          console.log("ERROR Updating StyleTraffic. Error: " + _context10.t0);
+          error = "ERROR Updating StyleTraffic. Error: " + _context10.t0;
+
+        case 21:
           res.json({
-            responseStatus: responseStatus
+            responseStatus: responseStatus,
+            error: err
           });
 
-        case 6:
+        case 22:
         case "end":
-          return _context11.stop();
+          return _context10.stop();
       }
     }
-  });
+  }, null, null, [[11, 17]]);
 });
 
 var exportCsv = function exportCsv(res, json) {

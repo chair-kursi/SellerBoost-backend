@@ -798,11 +798,22 @@ const styleTraffic = async (clientId, resultsobj) => {
         const summary = setSummaryObj(summaryObj);
 
         const dashboard = await StyleTraffic.insertMany(finalArray);
-        const summaryRes = await Summary.updateOne(
-            { clientId: clientId },
-            { dashboard: summary },
-            { new: true }
-        );
+        var summaryRes;
+        const findSummaryOfClient = await Summary.findOne({ clientId: clientId });
+        if (findSummaryOfClient) {
+            summaryRes = await Summary.updateOne(
+                { clientId: clientId },
+                { dashboard: summary },
+                { new: true }
+            );
+        }
+        else {
+            const newSummary = new Summary({
+                clientId: clientId,
+                dashboard: summary
+            });
+            summaryRes = await newSummary.save();
+        }
         return {
             data: dashboard,
             summary: summaryRes,
@@ -816,35 +827,42 @@ const styleTraffic = async (clientId, resultsobj) => {
 
 router.get("/styleTraffic", async (req, res) => {
 
-    const sessionCookie = req.cookies.session || "";
-    admin
-        .auth()
-        .verifySessionCookie(sessionCookie, true /** checkRevoked */)
-        .then(async (userData) => {
-            console.log("Logged in:", userData.email)
-            try {
-                var localId = req.cookies.LocalId;
-                const client = await Client.findOne({ password: localId });
-                const clientId = client.clientId;
+    // const sessionCookie = req.cookies.session || "";
+    // admin
+    //     .auth()
+    //     .verifySessionCookie(sessionCookie, true /** checkRevoked */)
+    //     .then(async (userData) => {
+    //         console.log("Logged in:", userData.email)
+    try {
+        var localId = req.cookies.LocalId;
+        const client = await Client.findOne({ password: localId });
+        const clientId = client.clientId;
 
-                const dashBoard = await StyleTraffic.find({ clientId: clientId });
-                res.json({ data: dashBoard, error: null });
-            } catch (err) {
-                res.json({ data: null, error: err });
-            }
-        })
-        .catch((error) => {
-            res.redirect("/signin");
-        });
+        const dashBoard = await StyleTraffic.find({ clientId: clientId });
+        res.json({ data: dashBoard, error: null });
+    } catch (err) {
+        res.json({ data: null, error: err });
+    }
+    // })
+    // .catch((error) => {
+    //     res.redirect("/signin");
+    // });
 
 });
 
 
 
 router.patch("/styleTraffic", async (req, res) => {
-    var responseStatus = "NA";
-    const date = new Date(req.body.date);
-    const today = new Date();
+
+    var localId = req.cookies.LocalId;
+    const client = await Client.findOne({ password: localId });
+    const clientId = client.clientId;
+
+    const styleCode = req.body.styleCode;
+
+    var responseStatus = "NA", error = null;
+    const date = new Date(req.body.date).toLocaleDateString();
+    const today = new Date().toLocaleDateString();
     const status = req.body.status;
     if (status === "Completed")
         responseStatus = "Completed";
@@ -855,8 +873,20 @@ router.patch("/styleTraffic", async (req, res) => {
             responseStatus = "Expired";
     }
 
+    try {
+        const updateStyle = await StyleTraffic.updateOne(
+            { clientId: clientId, styleCode: styleCode },
+            { planStatus: responseStatus, planDate: date }
+        );
+    }
+    catch (err) {
+        console.log("ERROR Updating StyleTraffic. Error: " + err);
+        error = "ERROR Updating StyleTraffic. Error: " + err;
+    }
+
     res.json({
-        responseStatus: responseStatus
+        responseStatus: responseStatus,
+        error: err
     })
 
 })
