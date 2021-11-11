@@ -813,7 +813,7 @@ const styleTraffic = async (clientId, resultsobj) => {
                 dashboard: summary,
                 updated: Date.now()
             });
-            summaryRes = await newSummary.save(); 
+            summaryRes = await newSummary.save();
         }
         return {
             data: dashboard,
@@ -865,7 +865,8 @@ router.patch("/styleTraffic", async (req, res) => {
     const styleCode = req.body.styleCode;
 
     var responseStatus = "NA", error = null;
-    const date = new Date(req.body.date).toLocaleDateString();
+
+    const date = (req.body.date) ? new Date(req.body.date).toLocaleDateString() : "NA";
     const today = new Date().toLocaleDateString();
     const status = req.body.status;
     if (status === "Completed")

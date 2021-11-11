@@ -1275,7 +1275,7 @@ router.patch("/styleTraffic", function _callee6(req, res) {
           clientId = client.clientId;
           styleCode = req.body.styleCode;
           responseStatus = "NA", error = null;
-          date = new Date(req.body.date).toLocaleDateString();
+          date = req.body.date ? new Date(req.body.date).toLocaleDateString() : "NA";
           today = new Date().toLocaleDateString();
           status = req.body.status;
           if (status === "Completed") responseStatus = "Completed";else if (date !== null) {
