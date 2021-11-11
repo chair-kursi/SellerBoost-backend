@@ -8,27 +8,27 @@ const summarySchema = mongoose.Schema({
     dashboard: {
         soldout: {
             type: Number,
-            required: true
+            // required: true
         },
         red: {
             type: Number,
-            required: true
+            // required: true
         },
         orange: {
             type: Number,
-            required: true
+            // required: true
         },
         green: {
             type: Number,
-            required: true
+            // required: true
         },
         overgreen: {
             type: Number,
-            required: true
+            // required: true
         },
         updated: {
             type: Date,
-            required: true
+            // required: true
         }
     },
     marketplaceHealth: {
@@ -36,26 +36,26 @@ const summarySchema = mongoose.Schema({
         {
             channelCode: {
                 type: String,
-                required: true
+                // required: true
             },
             mismatch: {
                 type: Number,
-                required: true
+                // required: true
             }
         },
         updated: {
             type: Date,
-            required: true
+            // required: true
         }
     },
     skuError: {
         errorCount: {
             type: Number,
-            required: true
+            // required: true
         },
         updated: {
             type: Date,
-            required: true
+            // required: true
         }
     },
     created: {

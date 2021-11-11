@@ -1139,7 +1139,8 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
                     return regeneratorRuntime.awrap(Summary.updateOne({
                       clientId: clientId
                     }, {
-                      dashboard: summary
+                      dashboard: summary,
+                      updated: Date.now()
                     }, {
                       "new": true
                     }));
@@ -1152,7 +1153,8 @@ var styleTraffic = function styleTraffic(clientId, resultsobj) {
                   case 50:
                     newSummary = new Summary({
                       clientId: clientId,
-                      dashboard: summary
+                      dashboard: summary,
+                      updated: Date.now()
                     });
                     _context7.next = 53;
                     return regeneratorRuntime.awrap(newSummary.save());
@@ -1267,6 +1269,9 @@ router.patch("/styleTraffic", function _callee6(req, res) {
 
         case 3:
           client = _context10.sent;
+          // if(!client)
+          // res.redirect("/signin");
+          // console.log("redirected");
           clientId = client.clientId;
           styleCode = req.body.styleCode;
           responseStatus = "NA", error = null;

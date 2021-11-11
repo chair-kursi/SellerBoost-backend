@@ -803,16 +803,17 @@ const styleTraffic = async (clientId, resultsobj) => {
         if (findSummaryOfClient) {
             summaryRes = await Summary.updateOne(
                 { clientId: clientId },
-                { dashboard: summary },
+                { dashboard: summary, updated: Date.now() },
                 { new: true }
             );
         }
         else {
             const newSummary = new Summary({
                 clientId: clientId,
-                dashboard: summary
+                dashboard: summary,
+                updated: Date.now()
             });
-            summaryRes = await newSummary.save();
+            summaryRes = await newSummary.save(); 
         }
         return {
             data: dashboard,
@@ -856,6 +857,9 @@ router.patch("/styleTraffic", async (req, res) => {
 
     var localId = req.cookies.LocalId;
     const client = await Client.findOne({ password: localId });
+    // if(!client)
+    // res.redirect("/signin");
+    // console.log("redirected");
     const clientId = client.clientId;
 
     const styleCode = req.body.styleCode;
