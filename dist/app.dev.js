@@ -97,12 +97,12 @@ app.use(cors({
   origin: ['http://localhost:3000', 'http://dev.suprcommerce.com:3000', 'http://suprcommerce.com', /\.suprcommerce.com\.com$/]
 }));
 app.use(express.json());
-app.use(cookiesParser());
-app.use(csrfMiddleware);
-app.all("*", function (req, res, next) {
-  res.cookie("XSRF-TOKEN", req.csrfToken());
-  next();
-}); //USING ROUTES AS A MIDDLEWARE
+app.use(cookiesParser()); // app.use(csrfMiddleware);
+// app.all("*", (req, res, next) => {
+//   res.cookie("XSRF-TOKEN", req.csrfToken());
+//   next();
+// });
+//USING ROUTES AS A MIDDLEWARE
 
 app.use("/style", styleRouter);
 app.use("/sku", skuMasterRouter);

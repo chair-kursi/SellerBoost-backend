@@ -77,12 +77,12 @@ app.use(cors({ credentials: true, allowedHeaders:['Origin', 'X-Requested0-With',
 }));
 app.use(express.json());
 app.use(cookiesParser());
-app.use(csrfMiddleware);
+// app.use(csrfMiddleware);
 
-app.all("*", (req, res, next) => {
-  res.cookie("XSRF-TOKEN", req.csrfToken());
-  next();
-});
+// app.all("*", (req, res, next) => {
+//   res.cookie("XSRF-TOKEN", req.csrfToken());
+//   next();
+// });
 
 //USING ROUTES AS A MIDDLEWARE
 app.use("/style", styleRouter);
