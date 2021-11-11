@@ -1254,7 +1254,7 @@ router.get("/styleTraffic", function _callee5(req, res) {
   }, null, null, [[0, 12]]);
 });
 router.patch("/styleTraffic", function _callee6(req, res) {
-  var localId, client, clientId, styleCode, responseStatus, error, date, today, status, updatedStyle;
+  var localId, client, clientId, styleCode, responseStatus, error, date, today, status, updatedStyle, style;
   return regeneratorRuntime.async(function _callee6$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
@@ -1277,8 +1277,23 @@ router.patch("/styleTraffic", function _callee6(req, res) {
             if (date > today) responseStatus = "In Progress";else responseStatus = "Expired";
           } // const findOne
 
-          _context10.prev = 11;
-          _context10.next = 14;
+          updatedStyle = {};
+          _context10.prev = 12;
+          _context10.next = 15;
+          return regeneratorRuntime.awrap(StyleTraffic.findOne({
+            clientId: clientId,
+            styleCode: styleCode
+          }));
+
+        case 15:
+          style = _context10.sent;
+
+          if (!style) {
+            _context10.next = 24;
+            break;
+          }
+
+          _context10.next = 19;
           return regeneratorRuntime.awrap(StyleTraffic.updateOne({
             clientId: clientId,
             styleCode: styleCode
@@ -1287,36 +1302,43 @@ router.patch("/styleTraffic", function _callee6(req, res) {
             planDate: date
           }));
 
-        case 14:
-          _context10.next = 16;
+        case 19:
+          _context10.next = 21;
           return regeneratorRuntime.awrap(StyleTraffic.findOne({
             clientId: clientId,
             styleCode: styleCode
           }));
 
-        case 16:
+        case 21:
           updatedStyle = _context10.sent;
-          _context10.next = 23;
+          _context10.next = 25;
           break;
 
-        case 19:
-          _context10.prev = 19;
-          _context10.t0 = _context10["catch"](11);
-          console.log("ERROR Updating StyleTraffic. Error: " + _context10.t0);
-          error = "ERROR Updating StyleTraffic. Error: " + _context10.t0;
+        case 24:
+          throw "Style Code (".concat(styleCode, ") not found!!");
 
-        case 23:
+        case 25:
+          _context10.next = 31;
+          break;
+
+        case 27:
+          _context10.prev = 27;
+          _context10.t0 = _context10["catch"](12);
+          console.log("ERROR Updating StyleTraffic. " + _context10.t0);
+          error = "ERROR Updating StyleTraffic. " + _context10.t0;
+
+        case 31:
           res.json({
             data: updatedStyle,
             error: error
           });
 
-        case 24:
+        case 32:
         case "end":
           return _context10.stop();
       }
     }
-  }, null, null, [[11, 19]]);
+  }, null, null, [[12, 27]]);
 });
 
 var exportCsv = function exportCsv(res, json) {
